@@ -1,7 +1,7 @@
 using FlowTasks.Application.DTOs;
 using FlowTasks.Application.Interfaces;
 using FlowTasks.Domain.Entities;
-using FlowTasks.Infrastructure.Data;
+using FlowTasks.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,12 +10,12 @@ namespace FlowTasks.Application.Services;
 public class UserService : IUserService
 {
     private readonly UserManager<User> _userManager;
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public UserService(UserManager<User> userManager, ApplicationDbContext context)
+    public UserService(UserManager<User> userManager, IUnitOfWork unitOfWork)
     {
         _userManager = userManager;
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<UserDto?> GetProfileAsync(string userId)
@@ -73,7 +73,7 @@ public class UserService : IUserService
 
     public async Task<List<UserDto>> GetProjectMembersAsync(string projectId)
     {
-        var memberIds = await _context.ProjectMembers
+        var memberIds = await _unitOfWork.ProjectMembers.Query()
             .Where(pm => pm.ProjectId == projectId)
             .Select(pm => pm.UserId)
             .ToListAsync();
@@ -92,4 +92,3 @@ public class UserService : IUserService
         }).ToList();
     }
 }
-

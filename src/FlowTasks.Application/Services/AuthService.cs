@@ -6,27 +6,26 @@ using FlowTasks.Application.DTOs;
 using FlowTasks.Application.DTOs.Auth;
 using FlowTasks.Application.Interfaces;
 using FlowTasks.Domain.Entities;
-using FlowTasks.Infrastructure.Data;
+using FlowTasks.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
-using TaskProject = FlowTasks.Domain.Entities.TaskProject;
 
 namespace FlowTasks.Application.Services;
 
 public class AuthService : IAuthService
 {
     private readonly UserManager<User> _userManager;
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
 
     public AuthService(
         UserManager<User> userManager,
-        ApplicationDbContext context,
+        IUnitOfWork unitOfWork,
         IConfiguration configuration)
     {
         _userManager = userManager;
-        _context = context;
+        _unitOfWork = unitOfWork;
         _configuration = configuration;
     }
 
@@ -220,4 +219,3 @@ public class AuthService : IAuthService
         };
     }
 }
-

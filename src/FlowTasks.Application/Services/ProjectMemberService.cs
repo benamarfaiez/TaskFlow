@@ -1,19 +1,19 @@
 using FlowTasks.Application.DTOs;
 using FlowTasks.Application.Interfaces;
 using FlowTasks.Domain.Entities;
-using FlowTasks.Infrastructure.Data;
+using FlowTasks.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlowTasks.Application.Services;
 
 public class ProjectMemberService : IProjectMemberService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IProjectService _projectService;
 
-    public ProjectMemberService(ApplicationDbContext context, IProjectService projectService)
+    public ProjectMemberService(IUnitOfWork unitOfWork, IProjectService projectService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _projectService = projectService;
     }
 
@@ -24,8 +24,7 @@ public class ProjectMemberService : IProjectMemberService
             throw new UnauthorizedAccessException("Only project admins can add members");
         }
 
-        var existingMember = await _context.ProjectMembers
-            .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.UserId == request.UserId);
+        var existingMember = await _unitOfWork.ProjectMembers.GetByProjectAndUserAsync(projectId, request.UserId);
 
         if (existingMember != null)
         {
@@ -40,25 +39,28 @@ public class ProjectMemberService : IProjectMemberService
             JoinedAt = DateTime.UtcNow
         };
 
-        _context.ProjectMembers.Add(member);
-        await _context.SaveChangesAsync();
+        await _unitOfWork.ProjectMembers.AddAsync(member);
+        await _unitOfWork.CompleteAsync();
 
-        await _context.Entry(member).Reference(m => m.User).LoadAsync();
+        // Load User navigation property
+        var memberWithUser = await _unitOfWork.ProjectMembers.Query()
+            .Include(m => m.User)
+            .FirstOrDefaultAsync(m => m.Id == member.Id);
 
         return new ProjectMemberDto
         {
-            Id = member.Id,
-            ProjectId = member.ProjectId,
+            Id = memberWithUser!.Id,
+            ProjectId = memberWithUser.ProjectId,
             User = new UserDto
             {
-                Id = member.User.Id,
-                Email = member.User.Email ?? string.Empty,
-                FirstName = member.User.FirstName,
-                LastName = member.User.LastName,
-                AvatarUrl = member.User.AvatarUrl
+                Id = memberWithUser.User.Id,
+                Email = memberWithUser.User.Email ?? string.Empty,
+                FirstName = memberWithUser.User.FirstName,
+                LastName = memberWithUser.User.LastName,
+                AvatarUrl = memberWithUser.User.AvatarUrl
             },
-            Role = member.Role,
-            JoinedAt = member.JoinedAt
+            Role = memberWithUser.Role,
+            JoinedAt = memberWithUser.JoinedAt
         };
     }
 
@@ -69,10 +71,7 @@ public class ProjectMemberService : IProjectMemberService
             throw new UnauthorizedAccessException("You are not a member of this project");
         }
 
-        var members = await _context.ProjectMembers
-            .Include(pm => pm.User)
-            .Where(pm => pm.ProjectId == projectId)
-            .ToListAsync();
+        var members = await _unitOfWork.ProjectMembers.GetByProjectIdWithUserAsync(projectId);
 
         return members.Select(m => new ProjectMemberDto
         {
@@ -98,7 +97,7 @@ public class ProjectMemberService : IProjectMemberService
             throw new UnauthorizedAccessException("Only project admins can remove members");
         }
 
-        var member = await _context.ProjectMembers
+        var member = await _unitOfWork.ProjectMembers.Query()
             .FirstOrDefaultAsync(pm => pm.ProjectId == projectId && pm.UserId == memberId);
 
         if (member == null)
@@ -106,8 +105,7 @@ public class ProjectMemberService : IProjectMemberService
             throw new InvalidOperationException("Member not found");
         }
 
-        _context.ProjectMembers.Remove(member);
-        await _context.SaveChangesAsync();
+        _unitOfWork.ProjectMembers.Delete(member);
+        await _unitOfWork.CompleteAsync();
     }
 }
-

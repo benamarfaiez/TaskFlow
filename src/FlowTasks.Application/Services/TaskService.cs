@@ -3,7 +3,7 @@ using FlowTasks.Application.DTOs;
 using FlowTasks.Application.Interfaces;
 using FlowTasks.Domain.Entities;
 using FlowTasks.Domain.Enums;
-using FlowTasks.Infrastructure.Data;
+using FlowTasks.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using TaskStatus = FlowTasks.Domain.Enums.TaskStatus;
 
@@ -11,16 +11,16 @@ namespace FlowTasks.Application.Services;
 
 public class TaskService : ITaskService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IProjectService _projectService;
     private readonly INotificationService _notificationService;
 
     public TaskService(
-        ApplicationDbContext context,
+        IUnitOfWork unitOfWork,
         IProjectService projectService,
         INotificationService notificationService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _projectService = projectService;
         _notificationService = notificationService;
     }
@@ -32,16 +32,14 @@ public class TaskService : ITaskService
             throw new UnauthorizedAccessException("You are not a member of this project");
         }
 
-        var project = await _context.Projects.FindAsync(projectId);
+        var project = await _unitOfWork.Projects.GetByIdAsync(projectId);
         if (project == null)
         {
             throw new InvalidOperationException("Project not found");
         }
 
         // Generate task key
-        var taskNumber = await _context.Tasks
-            .Where(t => t.ProjectId == projectId)
-            .CountAsync() + 1;
+        var taskNumber = await _unitOfWork.Tasks.CountAsync(t => t.ProjectId == projectId) + 1;
         var taskKey = $"{project.Key}-{taskNumber}";
 
         var task = new TaskProject
@@ -64,11 +62,11 @@ public class TaskService : ITaskService
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.Tasks.Add(task);
-        await _context.SaveChangesAsync();
+        await _unitOfWork.Tasks.AddAsync(task);
+        await _unitOfWork.CompleteAsync();
 
         // Add history
-        _context.TaskHistories.Add(new TaskHistory
+        await _unitOfWork.TaskHistories.AddAsync(new TaskHistory
         {
             TaskId = task.Id,
             UserId = userId,
@@ -76,7 +74,7 @@ public class TaskService : ITaskService
             NewValue = taskKey,
             CreatedAt = DateTime.UtcNow
         });
-        await _context.SaveChangesAsync();
+        await _unitOfWork.CompleteAsync();
 
         // SignalR notification
         await _notificationService.NotifyTaskCreatedAsync(projectId, taskKey);
@@ -86,7 +84,7 @@ public class TaskService : ITaskService
 
     public async Task<TaskDto?> GetByIdAsync(string id, string userId)
     {
-        var task = await _context.Tasks
+        var task = await _unitOfWork.Tasks.Query()
             .Include(t => t.Project)
             .Include(t => t.Assignee)
             .Include(t => t.Reporter)
@@ -107,7 +105,7 @@ public class TaskService : ITaskService
             throw new UnauthorizedAccessException("You are not a member of this project");
         }
 
-        var query = _context.Tasks
+        var query = _unitOfWork.Tasks.Query()
             .Include(t => t.Assignee)
             .Include(t => t.Reporter)
             .Where(t => t.ProjectId == projectId);
@@ -172,7 +170,7 @@ public class TaskService : ITaskService
 
     public async Task<TaskDto> UpdateAsync(string id, string userId, UpdateTaskRequest request)
     {
-        var task = await _context.Tasks
+        var task = await _unitOfWork.Tasks.Query()
             .Include(t => t.Project)
             .FirstOrDefaultAsync(t => t.Id == id);
 
@@ -186,48 +184,106 @@ public class TaskService : ITaskService
             throw new UnauthorizedAccessException("You are not a member of this project");
         }
 
+        var histories = new List<TaskHistory>();
+
         // Track changes for history
         if (request.Summary != null && request.Summary != task.Summary)
         {
-            AddHistory(task.Id, userId, "Summary", task.Summary, request.Summary);
+            histories.Add(new TaskHistory
+            {
+                TaskId = task.Id,
+                UserId = userId,
+                Field = "Summary",
+                OldValue = task.Summary,
+                NewValue = request.Summary,
+                CreatedAt = DateTime.UtcNow
+            });
             task.Summary = request.Summary;
         }
 
         if (request.Description != null && request.Description != task.Description)
         {
-            AddHistory(task.Id, userId, "Description", task.Description, request.Description);
+            histories.Add(new TaskHistory
+            {
+                TaskId = task.Id,
+                UserId = userId,
+                Field = "Description",
+                OldValue = task.Description,
+                NewValue = request.Description,
+                CreatedAt = DateTime.UtcNow
+            });
             task.Description = request.Description;
         }
 
         if (request.Type.HasValue && request.Type.Value != task.Type)
         {
-            AddHistory(task.Id, userId, "Type", task.Type.ToString(), request.Type.Value.ToString());
+            histories.Add(new TaskHistory
+            {
+                TaskId = task.Id,
+                UserId = userId,
+                Field = "Type",
+                OldValue = task.Type.ToString(),
+                NewValue = request.Type.Value.ToString(),
+                CreatedAt = DateTime.UtcNow
+            });
             task.Type = request.Type.Value;
         }
 
         if (request.Status.HasValue && request.Status.Value != task.Status)
         {
-            AddHistory(task.Id, userId, "Status", task.Status.ToString(), request.Status.Value.ToString());
+            histories.Add(new TaskHistory
+            {
+                TaskId = task.Id,
+                UserId = userId,
+                Field = "Status",
+                OldValue = task.Status.ToString(),
+                NewValue = request.Status.Value.ToString(),
+                CreatedAt = DateTime.UtcNow
+            });
             task.Status = request.Status.Value;
             await _notificationService.NotifyTaskMovedAsync(task.ProjectId, task.Key, task.Status.ToString());
         }
 
         if (request.Priority.HasValue && request.Priority.Value != task.Priority)
         {
-            AddHistory(task.Id, userId, "Priority", task.Priority.ToString(), request.Priority.Value.ToString());
+            histories.Add(new TaskHistory
+            {
+                TaskId = task.Id,
+                UserId = userId,
+                Field = "Priority",
+                OldValue = task.Priority.ToString(),
+                NewValue = request.Priority.Value.ToString(),
+                CreatedAt = DateTime.UtcNow
+            });
             task.Priority = request.Priority.Value;
         }
 
         if (request.AssigneeId != task.AssigneeId)
         {
-            AddHistory(task.Id, userId, "Assignee", task.AssigneeId ?? "Unassigned", request.AssigneeId ?? "Unassigned");
+            histories.Add(new TaskHistory
+            {
+                TaskId = task.Id,
+                UserId = userId,
+                Field = "Assignee",
+                OldValue = task.AssigneeId ?? "Unassigned",
+                NewValue = request.AssigneeId ?? "Unassigned",
+                CreatedAt = DateTime.UtcNow
+            });
             task.AssigneeId = request.AssigneeId;
             await _notificationService.NotifyUserAssignedAsync(task.ProjectId, task.Key, request.AssigneeId);
         }
 
         if (request.DueDate != task.DueDate)
         {
-            AddHistory(task.Id, userId, "DueDate", task.DueDate?.ToString() ?? "None", request.DueDate?.ToString() ?? "None");
+            histories.Add(new TaskHistory
+            {
+                TaskId = task.Id,
+                UserId = userId,
+                Field = "DueDate",
+                OldValue = task.DueDate?.ToString() ?? "None",
+                NewValue = request.DueDate?.ToString() ?? "None",
+                CreatedAt = DateTime.UtcNow
+            });
             task.DueDate = request.DueDate;
         }
 
@@ -236,26 +292,58 @@ public class TaskService : ITaskService
             var newLabels = JsonSerializer.Serialize(request.Labels);
             if (newLabels != task.Labels)
             {
-                AddHistory(task.Id, userId, "Labels", task.Labels ?? "[]", newLabels);
+                histories.Add(new TaskHistory
+                {
+                    TaskId = task.Id,
+                    UserId = userId,
+                    Field = "Labels",
+                    OldValue = task.Labels ?? "[]",
+                    NewValue = newLabels,
+                    CreatedAt = DateTime.UtcNow
+                });
                 task.Labels = newLabels;
             }
         }
 
         if (request.SprintId != task.SprintId)
         {
-            AddHistory(task.Id, userId, "Sprint", task.SprintId?.ToString() ?? "None", request.SprintId?.ToString() ?? "None");
+            histories.Add(new TaskHistory
+            {
+                TaskId = task.Id,
+                UserId = userId,
+                Field = "Sprint",
+                OldValue = task.SprintId?.ToString() ?? "None",
+                NewValue = request.SprintId?.ToString() ?? "None",
+                CreatedAt = DateTime.UtcNow
+            });
             task.SprintId = request.SprintId;
         }
 
         if (request.EpicId != task.EpicId)
         {
-            AddHistory(task.Id, userId, "Epic", task.EpicId?.ToString() ?? "None", request.EpicId?.ToString() ?? "None");
+            histories.Add(new TaskHistory
+            {
+                TaskId = task.Id,
+                UserId = userId,
+                Field = "Epic",
+                OldValue = task.EpicId?.ToString() ?? "None",
+                NewValue = request.EpicId?.ToString() ?? "None",
+                CreatedAt = DateTime.UtcNow
+            });
             task.EpicId = request.EpicId;
         }
 
         if (request.ParentId != task.ParentId)
         {
-            AddHistory(task.Id, userId, "Parent", task.ParentId?.ToString() ?? "None", request.ParentId?.ToString() ?? "None");
+            histories.Add(new TaskHistory
+            {
+                TaskId = task.Id,
+                UserId = userId,
+                Field = "Parent",
+                OldValue = task.ParentId?.ToString() ?? "None",
+                NewValue = request.ParentId?.ToString() ?? "None",
+                CreatedAt = DateTime.UtcNow
+            });
             task.ParentId = request.ParentId;
         }
 
@@ -269,7 +357,14 @@ public class TaskService : ITaskService
         }
 
         task.UpdatedAt = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
+        _unitOfWork.Tasks.Update(task);
+
+        if (histories.Any())
+        {
+            await _unitOfWork.TaskHistories.AddRangeAsync(histories);
+        }
+
+        await _unitOfWork.CompleteAsync();
 
         await _notificationService.NotifyTaskUpdatedAsync(task.ProjectId, task.Key);
 
@@ -278,7 +373,7 @@ public class TaskService : ITaskService
 
     public async Task DeleteAsync(string id, string userId)
     {
-        var task = await _context.Tasks
+        var task = await _unitOfWork.Tasks.Query()
             .Include(t => t.Project)
             .FirstOrDefaultAsync(t => t.Id == id);
 
@@ -295,8 +390,8 @@ public class TaskService : ITaskService
         var taskKey = task.Key;
         var projectId = task.ProjectId;
 
-        _context.Tasks.Remove(task);
-        await _context.SaveChangesAsync();
+        _unitOfWork.Tasks.Delete(task);
+        await _unitOfWork.CompleteAsync();
 
         await _notificationService.NotifyTaskDeletedAsync(projectId, taskKey);
     }
@@ -308,7 +403,7 @@ public class TaskService : ITaskService
             throw new UnauthorizedAccessException("You are not a member of this project");
         }
 
-        var tasks = await _context.Tasks
+        var tasks = await _unitOfWork.Tasks.Query()
             .Include(t => t.Assignee)
             .Include(t => t.Reporter)
             .Where(t => t.ProjectId == projectId)
@@ -324,19 +419,6 @@ public class TaskService : ITaskService
         }
 
         return board;
-    }
-
-    private void AddHistory(string taskId, string userId, string field, string? oldValue, string? newValue)
-    {
-        _context.TaskHistories.Add(new TaskHistory
-        {
-            TaskId = taskId,
-            UserId = userId,
-            Field = field,
-            OldValue = oldValue,
-            NewValue = newValue,
-            CreatedAt = DateTime.UtcNow
-        });
     }
 
     private TaskDto MapToTaskDto(TaskProject task)
@@ -380,4 +462,3 @@ public class TaskService : ITaskService
         };
     }
 }
-

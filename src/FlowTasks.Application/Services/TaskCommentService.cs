@@ -3,30 +3,30 @@ using System.Text.RegularExpressions;
 using FlowTasks.Application.DTOs;
 using FlowTasks.Application.Interfaces;
 using FlowTasks.Domain.Entities;
-using FlowTasks.Infrastructure.Data;
+using FlowTasks.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlowTasks.Application.Services;
 
 public class TaskCommentService : ITaskCommentService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IProjectService _projectService;
     private readonly INotificationService _notificationService;
 
     public TaskCommentService(
-        ApplicationDbContext context,
+        IUnitOfWork unitOfWork,
         IProjectService projectService,
         INotificationService notificationService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _projectService = projectService;
         _notificationService = notificationService;
     }
 
     public async Task<TaskCommentDto> CreateAsync(string taskId, string userId, CreateTaskCommentRequest request)
     {
-        var task = await _context.Tasks
+        var task = await _unitOfWork.Tasks.Query()
             .Include(t => t.Project)
             .FirstOrDefaultAsync(t => t.Id == taskId);
 
@@ -52,8 +52,8 @@ public class TaskCommentService : ITaskCommentService
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.TaskComments.Add(comment);
-        await _context.SaveChangesAsync();
+        await _unitOfWork.TaskComments.AddAsync(comment);
+        await _unitOfWork.CompleteAsync();
 
         await _notificationService.NotifyCommentAddedAsync(task.ProjectId, task.Key, comment.Id);
 
@@ -62,17 +62,13 @@ public class TaskCommentService : ITaskCommentService
 
     public async Task<List<TaskCommentDto>> GetByTaskIdAsync(string taskId, string userId)
     {
-        var task = await _context.Tasks.FindAsync(taskId);
+        var task = await _unitOfWork.Tasks.GetByIdAsync(taskId);
         if (task == null || !await _projectService.IsProjectMemberAsync(task.ProjectId, userId))
         {
             throw new UnauthorizedAccessException("You are not a member of this project");
         }
 
-        var comments = await _context.TaskComments
-            .Include(c => c.User)
-            .Where(c => c.TaskId == taskId)
-            .OrderBy(c => c.CreatedAt)
-            .ToListAsync();
+        var comments = await _unitOfWork.TaskComments.GetByTaskIdWithUserAsync(taskId);
 
         var result = new List<TaskCommentDto>();
         foreach (var comment in comments)
@@ -85,7 +81,7 @@ public class TaskCommentService : ITaskCommentService
 
     public async Task<TaskCommentDto> UpdateAsync(string commentId, string userId, CreateTaskCommentRequest request)
     {
-        var comment = await _context.TaskComments
+        var comment = await _unitOfWork.TaskComments.Query()
             .Include(c => c.Task)
             .FirstOrDefaultAsync(c => c.Id == commentId);
 
@@ -105,14 +101,15 @@ public class TaskCommentService : ITaskCommentService
         comment.Mentions = mentions.Any() ? JsonSerializer.Serialize(mentions) : null;
         comment.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        _unitOfWork.TaskComments.Update(comment);
+        await _unitOfWork.CompleteAsync();
 
         return await MapToDtoAsync(comment);
     }
 
     public async Task DeleteAsync(string commentId, string userId)
     {
-        var comment = await _context.TaskComments
+        var comment = await _unitOfWork.TaskComments.Query()
             .Include(c => c.Task)
             .FirstOrDefaultAsync(c => c.Id == commentId);
 
@@ -126,8 +123,8 @@ public class TaskCommentService : ITaskCommentService
             throw new UnauthorizedAccessException("You cannot delete this comment");
         }
 
-        _context.TaskComments.Remove(comment);
-        await _context.SaveChangesAsync();
+        _unitOfWork.TaskComments.Delete(comment);
+        await _unitOfWork.CompleteAsync();
     }
 
     private List<string> ExtractMentions(string content)
@@ -149,7 +146,13 @@ public class TaskCommentService : ITaskCommentService
 
     private async Task<TaskCommentDto> MapToDtoAsync(TaskComment comment)
     {
-        await _context.Entry(comment).Reference(c => c.User).LoadAsync();
+        // Ensure User is loaded
+        if (comment.User == null)
+        {
+            comment = await _unitOfWork.TaskComments.Query()
+                .Include(c => c.User)
+                .FirstOrDefaultAsync(c => c.Id == comment.Id);
+        }
 
         return new TaskCommentDto
         {
@@ -170,4 +173,3 @@ public class TaskCommentService : ITaskCommentService
         };
     }
 }
-

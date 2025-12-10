@@ -1,34 +1,30 @@
 using FlowTasks.Application.DTOs;
 using FlowTasks.Application.Interfaces;
-using FlowTasks.Infrastructure.Data;
+using FlowTasks.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlowTasks.Application.Services;
 
 public class TaskHistoryService : ITaskHistoryService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IProjectService _projectService;
 
-    public TaskHistoryService(ApplicationDbContext context, IProjectService projectService)
+    public TaskHistoryService(IUnitOfWork unitOfWork, IProjectService projectService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _projectService = projectService;
     }
 
     public async Task<List<TaskHistoryDto>> GetByTaskIdAsync(string taskId, string userId)
     {
-        var task = await _context.Tasks.FindAsync(taskId);
+        var task = await _unitOfWork.Tasks.GetByIdAsync(taskId);
         if (task == null || !await _projectService.IsProjectMemberAsync(task.ProjectId, userId))
         {
             throw new UnauthorizedAccessException("You are not a member of this project");
         }
 
-        var histories = await _context.TaskHistories
-            .Include(h => h.User)
-            .Where(h => h.TaskId == taskId)
-            .OrderByDescending(h => h.CreatedAt)
-            .ToListAsync();
+        var histories = await _unitOfWork.TaskHistories.GetByTaskIdWithUserAsync(taskId);
 
         return histories.Select(h => new TaskHistoryDto
         {
@@ -49,4 +45,3 @@ public class TaskHistoryService : ITaskHistoryService
         }).ToList();
     }
 }
-

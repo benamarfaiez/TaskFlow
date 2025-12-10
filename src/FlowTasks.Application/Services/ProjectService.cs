@@ -2,18 +2,18 @@ using FlowTasks.Application.DTOs;
 using FlowTasks.Application.Interfaces;
 using FlowTasks.Domain.Entities;
 using FlowTasks.Domain.Enums;
-using FlowTasks.Infrastructure.Data;
+using FlowTasks.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlowTasks.Application.Services;
 
 public class ProjectService : IProjectService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public ProjectService(ApplicationDbContext context)
+    public ProjectService(IUnitOfWork unitOfWork)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
     }
 
     public async Task<ProjectDto> CreateAsync(string userId, CreateProjectRequest request)
@@ -27,17 +27,17 @@ public class ProjectService : IProjectService
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.Projects.Add(project);
+        await _unitOfWork.Projects.AddAsync(project);
         
         // Add owner as admin member
-        _context.ProjectMembers.Add(new ProjectMember
+        await _unitOfWork.ProjectMembers.AddAsync(new ProjectMember
         {
             ProjectId = project.Id,
             UserId = userId,
             Role = ProjectRole.Admin
         });
 
-        await _context.SaveChangesAsync();
+        await _unitOfWork.CompleteAsync();
 
         return await GetByIdAsync(project.Id, userId) ?? throw new InvalidOperationException("Failed to create project");
     }
@@ -49,14 +49,14 @@ public class ProjectService : IProjectService
             return null;
         }
 
-        var project = await _context.Projects
+        var project = await _unitOfWork.Projects.Query()
             .Include(p => p.Owner)
             .FirstOrDefaultAsync(p => p.Id == id);
 
         if (project == null) return null;
 
-        var memberCount = await _context.ProjectMembers.CountAsync(pm => pm.ProjectId == id);
-        var taskCount = await _context.Tasks.CountAsync(t => t.ProjectId == id);
+        var memberCount = await _unitOfWork.ProjectMembers.CountAsync(pm => pm.ProjectId == id);
+        var taskCount = await _unitOfWork.Tasks.CountAsync(t => t.ProjectId == id);
 
         return new ProjectDto
         {
@@ -82,12 +82,12 @@ public class ProjectService : IProjectService
 
     public async Task<List<ProjectDto>> GetUserProjectsAsync(string userId)
     {
-        var projectIds = await _context.ProjectMembers
+        var projectIds = await _unitOfWork.ProjectMembers.Query()
             .Where(pm => pm.UserId == userId)
             .Select(pm => pm.ProjectId)
             .ToListAsync();
 
-        var projects = await _context.Projects
+        var projects = await _unitOfWork.Projects.Query()
             .Include(p => p.Owner)
             .Where(p => projectIds.Contains(p.Id))
             .ToListAsync();
@@ -95,8 +95,8 @@ public class ProjectService : IProjectService
         var result = new List<ProjectDto>();
         foreach (var project in projects)
         {
-            var memberCount = await _context.ProjectMembers.CountAsync(pm => pm.ProjectId == project.Id);
-            var taskCount = await _context.Tasks.CountAsync(t => t.ProjectId == project.Id);
+            var memberCount = await _unitOfWork.ProjectMembers.CountAsync(pm => pm.ProjectId == project.Id);
+            var taskCount = await _unitOfWork.Tasks.CountAsync(t => t.ProjectId == project.Id);
 
             result.Add(new ProjectDto
             {
@@ -130,7 +130,7 @@ public class ProjectService : IProjectService
             throw new UnauthorizedAccessException("Only project admins can update projects");
         }
 
-        var project = await _context.Projects.FindAsync(id);
+        var project = await _unitOfWork.Projects.GetByIdAsync(id);
         if (project == null)
         {
             throw new InvalidOperationException("Project not found");
@@ -140,7 +140,8 @@ public class ProjectService : IProjectService
         project.Description = request.Description;
         project.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        _unitOfWork.Projects.Update(project);
+        await _unitOfWork.CompleteAsync();
 
         return await GetByIdAsync(id, userId) ?? throw new InvalidOperationException("Failed to update project");
     }
@@ -152,26 +153,24 @@ public class ProjectService : IProjectService
             throw new UnauthorizedAccessException("Only project admins can delete projects");
         }
 
-        var project = await _context.Projects.FindAsync(id);
+        var project = await _unitOfWork.Projects.GetByIdAsync(id);
         if (project == null)
         {
             throw new InvalidOperationException("Project not found");
         }
 
-        _context.Projects.Remove(project);
-        await _context.SaveChangesAsync();
+        _unitOfWork.Projects.Delete(project);
+        await _unitOfWork.CompleteAsync();
     }
 
     public async Task<bool> IsProjectMemberAsync(string projectId, string userId)
     {
-        return await _context.ProjectMembers
-            .AnyAsync(pm => pm.ProjectId == projectId && pm.UserId == userId);
+        return await _unitOfWork.ProjectMembers.IsMemberAsync(projectId, userId);
     }
 
     public async Task<bool> IsProjectAdminAsync(string projectId, string userId)
     {
-        return await _context.ProjectMembers
-            .AnyAsync(pm => pm.ProjectId == projectId && 
+        return await _unitOfWork.ProjectMembers.ExistsAsync(pm => pm.ProjectId == projectId && 
                            pm.UserId == userId && 
                            pm.Role == ProjectRole.Admin);
     }

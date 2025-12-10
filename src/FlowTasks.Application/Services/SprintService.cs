@@ -1,19 +1,19 @@
 using FlowTasks.Application.DTOs;
 using FlowTasks.Application.Interfaces;
 using FlowTasks.Domain.Entities;
-using FlowTasks.Infrastructure.Data;
+using FlowTasks.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlowTasks.Application.Services;
 
 public class SprintService : ISprintService
 {
-    private readonly ApplicationDbContext _context;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly IProjectService _projectService;
 
-    public SprintService(ApplicationDbContext context, IProjectService projectService)
+    public SprintService(IUnitOfWork unitOfWork, IProjectService projectService)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
         _projectService = projectService;
     }
 
@@ -25,13 +25,14 @@ public class SprintService : ISprintService
         }
 
         // Deactivate other active sprints in the project
-        var activeSprints = await _context.Sprints
+        var activeSprints = await _unitOfWork.Sprints.Query()
             .Where(s => s.ProjectId == projectId && s.IsActive)
             .ToListAsync();
 
         foreach (var s in activeSprints)
         {
             s.IsActive = false;
+            _unitOfWork.Sprints.Update(s);
         }
 
         var sprint = new Sprint
@@ -45,23 +46,22 @@ public class SprintService : ISprintService
             CreatedAt = DateTime.UtcNow
         };
 
-        _context.Sprints.Add(sprint);
-        await _context.SaveChangesAsync();
+        await _unitOfWork.Sprints.AddAsync(sprint);
+        await _unitOfWork.CompleteAsync();
 
         return await GetByIdAsync(sprint.Id, userId) ?? throw new InvalidOperationException("Failed to create sprint");
     }
 
     public async Task<SprintDto?> GetByIdAsync(string id, string userId)
     {
-        var sprint = await _context.Sprints
-            .FirstOrDefaultAsync(s => s.Id == id);
+        var sprint = await _unitOfWork.Sprints.GetByIdAsync(id);
 
         if (sprint == null || !await _projectService.IsProjectMemberAsync(sprint.ProjectId, userId))
         {
             return null;
         }
 
-        var taskCount = await _context.Tasks.CountAsync(t => t.SprintId == id);
+        var taskCount = await _unitOfWork.Tasks.CountAsync(t => t.SprintId == id);
 
         return new SprintDto
         {
@@ -84,15 +84,12 @@ public class SprintService : ISprintService
             throw new UnauthorizedAccessException("You are not a member of this project");
         }
 
-        var sprints = await _context.Sprints
-            .Where(s => s.ProjectId == projectId)
-            .OrderByDescending(s => s.CreatedAt)
-            .ToListAsync();
+        var sprints = await _unitOfWork.Sprints.GetByProjectIdAsync(projectId);
 
         var result = new List<SprintDto>();
         foreach (var sprint in sprints)
         {
-            var taskCount = await _context.Tasks.CountAsync(t => t.SprintId == sprint.Id);
+            var taskCount = await _unitOfWork.Tasks.CountAsync(t => t.SprintId == sprint.Id);
             result.Add(new SprintDto
             {
                 Id = sprint.Id,
@@ -112,8 +109,7 @@ public class SprintService : ISprintService
 
     public async Task<SprintDto> UpdateAsync(string id, string userId, CreateSprintRequest request)
     {
-        var sprint = await _context.Sprints
-            .FirstOrDefaultAsync(s => s.Id == id);
+        var sprint = await _unitOfWork.Sprints.GetByIdAsync(id);
 
         if (sprint == null)
         {
@@ -131,15 +127,15 @@ public class SprintService : ISprintService
         sprint.EndDate = request.EndDate;
         sprint.UpdatedAt = DateTime.UtcNow;
 
-        await _context.SaveChangesAsync();
+        _unitOfWork.Sprints.Update(sprint);
+        await _unitOfWork.CompleteAsync();
 
         return await GetByIdAsync(id, userId) ?? throw new InvalidOperationException("Failed to update sprint");
     }
 
     public async Task DeleteAsync(string id, string userId)
     {
-        var sprint = await _context.Sprints
-            .FirstOrDefaultAsync(s => s.Id == id);
+        var sprint = await _unitOfWork.Sprints.GetByIdAsync(id);
 
         if (sprint == null)
         {
@@ -151,8 +147,7 @@ public class SprintService : ISprintService
             throw new UnauthorizedAccessException("Only project admins can delete sprints");
         }
 
-        _context.Sprints.Remove(sprint);
-        await _context.SaveChangesAsync();
+        _unitOfWork.Sprints.Delete(sprint);
+        await _unitOfWork.CompleteAsync();
     }
 }
-

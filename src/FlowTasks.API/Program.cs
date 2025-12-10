@@ -3,11 +3,10 @@ using FlowTasks.Application.Services;
 using FlowTasks.Domain.Entities;
 using FlowTasks.Infrastructure.Data;
 using FlowTasks.Infrastructure.Hubs;
+using FlowTasks.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Diagnostics.HealthChecks; // Ajout de l'import nécessaire
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -130,6 +129,9 @@ builder.Services.AddCors(options =>
 
 // SignalR
 builder.Services.AddSignalR();
+
+// Repositories and UnitOfWork
+builder.Services.AddRepositories();
 
 // Application services
 builder.Services.AddScoped<IAuthService, AuthService>();

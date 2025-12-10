@@ -29,8 +29,8 @@ src/
 ## 🛠️ Prérequis
 
 - .NET 8 SDK
-- PostgreSQL 12+ (ou Docker)
-- Visual Studio 2022 / VS Code / Rider
+- PostgreSQL 12+
+- Visual Studio 2022 / VS Code 
 
 ## 📦 Installation
 

@@ -31,8 +31,8 @@ jobs:
           key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
           restore-keys: ${{ runner.os }}-nuget-
 
-  # 2. Restore dependencies
-  restore:
+  # 2. Restore dependencies + Build
+  build:
     needs: setup
     runs-on: ubuntu-latest
     steps:
@@ -44,26 +44,13 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
-      - name: Restore
+      - name: Restore dependencies
         run: dotnet restore
-
-  # 3. Build
-  build:
-    needs: restore
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: 8.0.x
 
       - name: Build
         run: dotnet build --configuration Release --no-restore
 
-  # 4. Unit Tests + Coverage
+  # 3. Unit Tests + Coverage
   test:
     needs: build
     runs-on: ubuntu-latest
@@ -85,6 +72,9 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
 
       - name: Run Unit Tests + Coverage
         env:
@@ -109,7 +99,7 @@ jobs:
           name: test-results
           path: "**/TestResults/*.trx"
 
-  # 5. Code Quality (SonarCloud ou autre)
+  # 4. Code Quality (SonarCloud ou autre)
   quality:
     needs: test
     runs-on: ubuntu-latest
@@ -125,7 +115,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-  # 6. Build & Push Docker Image (seulement sur main/develop)
+  # 5. Build & Push Docker Image (seulement sur main/develop)
   docker:
     needs: quality
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
@@ -158,7 +148,7 @@ jobs:
             ghcr.io/$$ {{ github.repository_owner }}/ $${{ github.event.repository.name }}:${{ github.sha }}
             ghcr.io/$$ {{ github.repository_owner }}/ $${{ github.event.repository.name }}:${{ github.ref_name == 'main' && 'stable' || 'dev' }}
 
-  # 7. Notification (optionnel)
+  # 6. Notification (optionnel)
   notify:
     needs: [test, docker]
     if: failure()

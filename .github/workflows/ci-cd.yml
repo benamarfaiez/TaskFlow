@@ -7,10 +7,66 @@ on:
     branches: [ main, develop ]
 
 jobs:
-  build-and-test:
-    name: Build & Test (.NET 8)
+  # 1. Checkout + Setup .NET
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache.outputs.cache-key }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Cache dependencies
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
+          restore-keys: ${{ runner.os }}-nuget-
+
+  # 2. Restore dependencies
+  restore:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+  # 3. Build
+  build:
+    needs: restore
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+
+  # 4. Unit Tests + Coverage
+  test:
+    needs: build
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:16-alpine
@@ -18,33 +74,33 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: taskflow_test
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+        ports: [5432:5432]
+        options: --health-cmd="pg_isready -U postgres" --health-interval=10s --health-timeout=5s --health-retries=5
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup .NET 8
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: 8.0.x
 
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --configuration Release --no-restore
-
-      - name: Run tests
+      - name: Run Unit Tests + Coverage
         env:
           ConnectionStrings__DefaultConnection: Server=localhost;Port=5432;Database=taskflow_test;User Id=postgres;Password=postgres;
-        run: dotnet test --no-build --configuration Release --logger "trx;LogFileName=test-results.trx" --collect:"XPlat Code Coverage"
+        run: |
+          dotnet test --no-build --configuration Release \
+            --collect:"XPlat Code Coverage" \
+            --results-directory:./coverage \
+            --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/**/*.cobertura.xml
+          fail_ci_if_error: false
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -53,18 +109,30 @@ jobs:
           name: test-results
           path: "**/TestResults/*.trx"
 
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v4
+  # 5. Code Quality (SonarCloud ou autre)
+  quality:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: "**/coverage.cobertura.xml"
-          fail_ci_if_error: false
+          fetch-depth: 0
 
-  publish-docker:
-    name: Build & Push Docker Image
-    needs: build-and-test
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-scan-action@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+  # 6. Build & Push Docker Image (seulement sur main/develop)
+  docker:
+    needs: quality
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
 
     steps:
       - name: Checkout code
@@ -80,28 +148,25 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
+      - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
-            ghcr.io/${{ github.repository }}:${{ github.ref == 'refs/heads/main' && 'stable' || 'dev' }}
+            ghcr.io/$$ {{ github.repository_owner }}/ $${{ github.event.repository.name }}:latest
+            ghcr.io/$$ {{ github.repository_owner }}/ $${{ github.event.repository.name }}:${{ github.sha }}
+            ghcr.io/$$ {{ github.repository_owner }}/ $${{ github.event.repository.name }}:${{ github.ref_name == 'main' && 'stable' || 'dev' }}
 
+  # 7. Notification (optionnel)
   notify:
-    name: Notification Slack (optionnel)
-    needs: [build-and-test, publish-docker]
+    needs: [test, docker]
     if: failure()
     runs-on: ubuntu-latest
     steps:
-      - name: Slack Notification on Failure
+      - name: Slack Notification
         uses: slackapi/slack-github-action@v1.26.0
         with:
-          payload: |
-            {
-              "text": "TaskFlow build failed! <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View workflow>"
-            }
+          payload: '{"text": "TaskFlow CI/CD failed! Check: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

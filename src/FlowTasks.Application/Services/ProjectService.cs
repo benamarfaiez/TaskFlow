@@ -18,8 +18,21 @@ public class ProjectService : IProjectService
 
     public async Task<ProjectDto> CreateAsync(string userId, CreateProjectRequest request)
     {
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
+
+        if (request == null)
+            throw new ArgumentException("Request cannot be null.", nameof(request));
+
+        if (string.IsNullOrWhiteSpace(request.Name))
+            throw new InvalidOperationException("Project name is required.");
+
+        if (string.IsNullOrWhiteSpace(request.Key))
+            throw new InvalidOperationException("Project key is required.");
+
         var project = new Project
         {
+            Id = Guid.NewGuid().ToString(),
             Key = request.Key.ToUpper(),
             Name = request.Name,
             Description = request.Description,

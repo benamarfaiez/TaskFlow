@@ -1,8 +1,9 @@
 using AutoFixture;
 using AutoFixture.AutoMoq;
-using Moq;
-using Microsoft.EntityFrameworkCore;
+using FlowTasks.Domain.Entities;
 using FlowTasks.Tests.Utilities;
+using Microsoft.EntityFrameworkCore;
+using Moq;
 
 namespace FlowTasks.Tests.Common;
 

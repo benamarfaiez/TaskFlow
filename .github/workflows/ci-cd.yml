@@ -80,10 +80,7 @@ jobs:
         env:
           ConnectionStrings__DefaultConnection: Server=localhost;Port=5432;Database=taskflow_test;User Id=postgres;Password=postgres;
         run: |
-          dotnet test --no-build --configuration Release \
-            --collect:"XPlat Code Coverage" \
-            --results-directory:./coverage \
-            --logger "trx;LogFileName=test-results.trx"
+          dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory:./coverage --logger "trx;LogFileName=test-results.trx"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

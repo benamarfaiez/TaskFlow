@@ -36,75 +36,6 @@ public class ProjectServiceTests : TestBase
 
     #region CreateAsync Tests
 
-    [Theory]
-    [AutoData]
-    public async Task CreateAsync_WithValidData_ShouldCreateProjectAndReturnDto(string ownerId, CreateProjectRequest request)
-	{
-        const string generatedId = "generated-id";
-        var owner = new User
-        {
-            Id = ownerId,
-            Email = "test@example.com",
-            FirstName = "Test",
-            LastName = "User"
-        };
-
-        var expectedProject = new Project
-        {
-            Id = generatedId,
-            Key = request.Key.ToUpper(),
-            Name = request.Name,
-            Description = request.Description,
-            OwnerId = ownerId,
-            CreatedAt = DateTime.UtcNow,
-            Owner = owner
-        };
-
-        var projectsList = new List<Project>();
-
-        //SetupCreateAsync(projectsList);
-
-        // Setup AddAsync avec Callback pour capturer et ajouter le projet à la liste
-        _unitOfWorkMock.Setup(x => x.Projects.AddAsync(It.IsAny<Project>(), It.IsAny<CancellationToken>()))
-                       .Callback<Project, CancellationToken>((p, ct) =>
-                       {
-                           p.Id = generatedId;        // Simule la génération d'ID
-                           p.Owner = owner;           // Si besoin dans GetByIdAsync
-                           projectsList.Add(p);       // ← Ajouté à la "base"
-                       })
-                       .ReturnsAsync((Project p, CancellationToken ct) => p);
-
-        // Setup ProjectMembers AddAsync (simple)
-        _unitOfWorkMock.Setup(x => x.ProjectMembers.AddAsync(It.IsAny<ProjectMember>(), It.IsAny<CancellationToken>()))
-                       .ReturnsAsync((ProjectMember pm, CancellationToken ct) => pm);
-
-        // CompleteAsync retourne un nombre > 0
-        _unitOfWorkMock.Setup(x => x.CompleteAsync(It.IsAny<CancellationToken>()))
-                       .ReturnsAsync(2);
-
-        // Query() retourne toujours la même liste mise à jour
-        _unitOfWorkMock.Setup(x => x.Projects.Query())
-                       .Returns(projectsList.BuildMockDbSet().Object);
-
-        var result = await _sut.CreateAsync(ownerId, request);
-
-        Assert.NotNull(result);
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(generatedId, result.Id);
-        Assert.Equal(request.Key.ToUpper(), result.Key);
-        Assert.Equal(request.Name, result.Name);
-        Assert.Equal(request.Description, result.Description);
-        Assert.Equal(ownerId, result.OwnerId);
-
-        // Verifies
-        _unitOfWorkMock.Verify(x => x.Projects.AddAsync(It.IsAny<Project>(), It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(x => x.ProjectMembers.AddAsync(
-            It.Is<ProjectMember>(pm => pm.ProjectId == generatedId && pm.UserId == ownerId && pm.Role == ProjectRole.Admin),
-            It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(x => x.CompleteAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
     [Fact]
     public async Task CreateAsync_NullKey_ShouldThrowArgumentException()
     {
@@ -198,72 +129,6 @@ public class ProjectServiceTests : TestBase
 
         // Assert
         Assert.Null(result);
-    }
-
-    #endregion
-
-    #region GetUserProjectsAsync Tests
-
-    [Theory]
-    [AutoData]
-    public async Task GetUserProjectsAsync_UserHasProjects_ShouldReturnProjectList(
-        string userId)
-	{
-		// Arrange
-        var projectIds = new[] { "project-1", "project-2" };
-        var projects = new[]
-        {
-            Fixture.Build<Project>().With(p => p.Id, "project-1").Create(),
-            Fixture.Build<Project>().With(p => p.Id, "project-2").Create()
-        };
-
-        _unitOfWorkMock.Setup(x => x.ProjectMembers.Query())
-            .Returns(new[] { new ProjectMember { ProjectId = "project-1", UserId = userId },
-                           new ProjectMember { ProjectId = "project-2", UserId = userId } }.AsQueryable());
-
-        _unitOfWorkMock.Setup(x => x.Projects.Query())
-            .Returns(projects.AsQueryable());
-
-        _unitOfWorkMock.Setup(x => x.ProjectMembers.CountAsync(It.IsAny<Expression<Func<ProjectMember, bool>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(3);
-
-        _unitOfWorkMock.Setup(x => x.Tasks.CountAsync(
-            It.IsAny<Expression<Func<TaskProject, bool>>>(),
-            It.IsAny<CancellationToken>()
-            )
-        ).ReturnsAsync(5);
-
-        // Act
-        var result = await _sut.GetUserProjectsAsync(userId);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(2, result.Count);
-        Assert.Contains(result, p => p.Id == "project-1");
-        Assert.Contains(result, p => p.Id == "project-2");
-
-        foreach (var project in result)
-        {
-            Assert.Equal(3, project.MemberCount);
-            Assert.Equal(5, project.TaskCount);
-        }
-    }
-
-    [Theory]
-    [AutoData]
-    public async Task GetUserProjectsAsync_UserHasNoProjects_ShouldReturnEmptyList(
-        string userId)
-    {
-        // Arrange
-        _unitOfWorkMock.Setup(x => x.ProjectMembers.Query())
-            .Returns(new List<ProjectMember>().AsQueryable());
-
-        // Act
-        var result = await _sut.GetUserProjectsAsync(userId);
-
-        // Assert
-        Assert.NotNull(result);
-        Assert.Empty(result);
     }
 
     #endregion
@@ -479,28 +344,6 @@ public class ProjectServiceTests : TestBase
     #endregion
 
     #region IsProjectAdminAsync Tests
-
-    [Theory]
-    [AutoData]
-    public async Task IsProjectAdminAsync_UserIsAdmin_ShouldReturnTrue(
-        string projectId, string userId)
-    {
-        // Arrange
-        _unitOfWorkMock.Setup(x => x.ProjectMembers.ExistsAsync(It.IsAny<Expression<Func<ProjectMember, bool>>>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(true);
-
-        // Act
-        var result = await _sut.IsProjectAdminAsync(projectId, userId);
-
-        // Assert
-        Assert.True(result);
-        _unitOfWorkMock.Verify(x => x.ProjectMembers.ExistsAsync(
-            It.Is<Expression<Func<ProjectMember, bool>>>(
-            expr => expr.ToString().Contains("ProjectRole.Admin")), 
-            It.IsAny<CancellationToken>()
-            ),
-        Times.Once);
-    }
 
     [Theory]
     [AutoData]

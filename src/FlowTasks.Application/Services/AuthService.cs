@@ -16,7 +16,6 @@ namespace FlowTasks.Application.Services;
 public class AuthService : IAuthService
 {
     private readonly UserManager<User> _userManager;
-    private readonly IUnitOfWork _unitOfWork;
     private readonly IConfiguration _configuration;
 
     public AuthService(
@@ -25,7 +24,6 @@ public class AuthService : IAuthService
         IConfiguration configuration)
     {
         _userManager = userManager;
-        _unitOfWork = unitOfWork;
         _configuration = configuration;
     }
 

@@ -111,6 +111,14 @@ jobs:
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          args: >
+            -Dsonar.projectKey=TaskFlow
+            -Dsonar.organization=faiez_benamar
+            -Dsonar.sources=.
+            -Dsonar.tests=.
+            -Dsonar.cs.opencover.reportsPaths=**/coverage/**/*.opencover.xml
+            -Dsonar.qualitygate.wait=true
 
   # 5. Build & Push Docker Image (seulement sur main/develop)
   docker:

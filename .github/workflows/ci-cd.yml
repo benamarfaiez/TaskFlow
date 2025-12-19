@@ -113,14 +113,15 @@ jobs:
           SONAR_HOST_URL: https://sonarcloud.io
         with:
           args: >
-            -Dsonar.projectKey=benamarfaiez_TaskFlow
+            -Dsonar.projectKey=TaskFlow
+            -Dsonar.organization=benamarfaiez
             -Dsonar.sources=.
             -Dsonar.tests=.
             -Dsonar.exclusions=**/bin/**,**/obj/**,**/*.xml
             -Dsonar.cs.opencover.reportsPaths=**/coverage/**/*.opencover.xml
             -Dsonar.qualitygate.wait=true
 
-  # 5. Build & Push Docker Image (seulement sur main/develop)
+  # 5. Build & Push Docker Image
   docker:
     needs: quality
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
@@ -152,16 +153,3 @@ jobs:
             ghcr.io/$$ {{ github.repository_owner }}/ $${{ github.event.repository.name }}:latest
             ghcr.io/$$ {{ github.repository_owner }}/ $${{ github.event.repository.name }}:${{ github.sha }}
             ghcr.io/$$ {{ github.repository_owner }}/ $${{ github.event.repository.name }}:${{ github.ref_name == 'main' && 'stable' || 'dev' }}
-
-  # 6. Notification (optionnel)
-  notify:
-    needs: [test, docker]
-    if: failure()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Slack Notification
-        uses: slackapi/slack-github-action@v1.26.0
-        with:
-          payload: '{"text": "TaskFlow CI/CD failed! Check: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

@@ -1,7 +1,9 @@
 using FlowTasks.Infrastructure.Data;
+using FlowTasks.Infrastructure.Interfaces;
+using FlowTasks.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace FlowTasks.Infrastructure.Repositories;
+namespace FlowTasks.Infrastructure;
 
 public class UnitOfWork : IUnitOfWork
 {

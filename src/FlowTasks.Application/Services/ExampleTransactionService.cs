@@ -1,6 +1,6 @@
 using FlowTasks.Domain.Entities;
 using FlowTasks.Domain.Enums;
-using FlowTasks.Infrastructure.Repositories;
+using FlowTasks.Infrastructure.Interfaces;
 
 namespace FlowTasks.Application.Services;
 

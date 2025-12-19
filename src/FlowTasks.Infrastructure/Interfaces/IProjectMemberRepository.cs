@@ -1,6 +1,6 @@
 using FlowTasks.Domain.Entities;
 
-namespace FlowTasks.Infrastructure.Repositories;
+namespace FlowTasks.Infrastructure.Interfaces;
 
 public interface IProjectMemberRepository : IRepository<ProjectMember>
 {

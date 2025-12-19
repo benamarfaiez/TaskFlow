@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using FlowTasks.Infrastructure.Data;
+using FlowTasks.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlowTasks.Infrastructure.Repositories;

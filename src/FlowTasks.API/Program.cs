@@ -1,9 +1,9 @@
 using FlowTasks.Application.Interfaces;
 using FlowTasks.Application.Services;
 using FlowTasks.Domain.Entities;
+using FlowTasks.Infrastructure;
 using FlowTasks.Infrastructure.Data;
 using FlowTasks.Infrastructure.Hubs;
-using FlowTasks.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;

@@ -2,7 +2,7 @@ using FlowTasks.Application.DTOs;
 using FlowTasks.Application.Interfaces;
 using FlowTasks.Domain.Entities;
 using FlowTasks.Domain.Enums;
-using FlowTasks.Infrastructure.Repositories;
+using FlowTasks.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlowTasks.Application.Services;

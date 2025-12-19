@@ -6,7 +6,7 @@ using FlowTasks.Application.DTOs;
 using FlowTasks.Application.DTOs.Auth;
 using FlowTasks.Application.Interfaces;
 using FlowTasks.Domain.Entities;
-using FlowTasks.Infrastructure.Repositories;
+using FlowTasks.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;

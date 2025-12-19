@@ -5,7 +5,7 @@ using FlowTasks.Application.Interfaces;
 using FlowTasks.Application.Services;
 using FlowTasks.Domain.Entities;
 using FlowTasks.Domain.Enums;
-using FlowTasks.Infrastructure.Repositories;
+using FlowTasks.Infrastructure.Interfaces;
 using FlowTasks.Tests.Common;
 using MockQueryable.Moq;
 using Moq;

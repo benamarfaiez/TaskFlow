@@ -1,4 +1,4 @@
-namespace FlowTasks.Infrastructure.Repositories;
+namespace FlowTasks.Infrastructure.Interfaces;
 
 public interface IUnitOfWork : IDisposable
 {

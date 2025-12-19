@@ -1,7 +1,9 @@
 using FlowTasks.Infrastructure.Data;
+using FlowTasks.Infrastructure.Interfaces;
+using FlowTasks.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore.Storage;
 
-namespace FlowTasks.Infrastructure.Repositories;
+namespace FlowTasks.Infrastructure;
 
 public class UnitOfWork : IUnitOfWork
 {
@@ -14,6 +16,8 @@ public class UnitOfWork : IUnitOfWork
     private ISprintRepository? _sprints;
     private IProjectMemberRepository? _projectMembers;
     private ITaskHistoryRepository? _taskHistories;
+
+    private bool _disposed = false;
 
     public UnitOfWork(ApplicationDbContext context)
     {
@@ -106,8 +110,21 @@ public class UnitOfWork : IUnitOfWork
 
     public void Dispose()
     {
-        _transaction?.Dispose();
-        _context.Dispose();
+        Dispose(disposing: true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool disposing)
+    {
+        if (_disposed)
+            return;
+
+        if (disposing)
+        {
+            _transaction?.Dispose();
+            _context.Dispose();
+        }
+        _disposed = true;
     }
 }
 

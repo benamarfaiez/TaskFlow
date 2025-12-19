@@ -1,5 +1,6 @@
 using FlowTasks.Domain.Entities;
 using FlowTasks.Infrastructure.Data;
+using FlowTasks.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlowTasks.Infrastructure.Repositories;
@@ -25,12 +26,5 @@ public class SprintRepository : Repository<Sprint>, ISprintRepository
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<Sprint?> GetByIdWithDetailsAsync(string id, CancellationToken cancellationToken = default)
-    {
-        return await _dbSet
-            .Include(s => s.Project)
-            .Include(s => s.Tasks)
-            .FirstOrDefaultAsync(s => s.Id == id, cancellationToken);
-    }
 }
 

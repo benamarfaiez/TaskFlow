@@ -1,8 +1,10 @@
+using FlowTasks.Infrastructure.Interfaces;
+using FlowTasks.Infrastructure.Repositories;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace FlowTasks.Infrastructure.Repositories;
+namespace FlowTasks.Infrastructure;
 
-public static class ServiceCollectionExtensions
+public static class CollectionExtensions
 {
     public static IServiceCollection AddRepositories(this IServiceCollection services)
     {

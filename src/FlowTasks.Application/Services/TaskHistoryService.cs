@@ -1,6 +1,6 @@
 using FlowTasks.Application.DTOs;
 using FlowTasks.Application.Interfaces;
-using FlowTasks.Infrastructure.Repositories;
+using FlowTasks.Infrastructure.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace FlowTasks.Application.Services;

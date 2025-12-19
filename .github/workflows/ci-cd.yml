@@ -80,10 +80,7 @@ jobs:
         env:
           ConnectionStrings__DefaultConnection: Server=localhost;Port=5432;Database=taskflow_test;User Id=postgres;Password=postgres;
         run: |
-          dotnet test --no-build --configuration Release \
-            --collect:"XPlat Code Coverage" \
-            --results-directory:./coverage \
-            --logger "trx;LogFileName=test-results.trx"
+          dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory:./coverage --logger "trx;LogFileName=test-results.trx"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
@@ -99,23 +96,32 @@ jobs:
           name: test-results
           path: "**/TestResults/*.trx"
 
-  # 4. Code Quality (SonarCloud ou autre)
+  # 4. Code Quality
   quality:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
           fetch-depth: 0
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-scan-action@v3
+        uses: SonarSource/sonarqube-scan-action@a31c9398be7ace6bbfaf30c0bd5d415f843d45e9
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
+        with:
+          args: >
+            -Dsonar.projectKey=TaskFlow
+            -Dsonar.organization=benamarfaiez
+            -Dsonar.sources=.
+            -Dsonar.tests=.
+            -Dsonar.exclusions=**/bin/**,**/obj/**,**/*.xml
+            -Dsonar.cs.opencover.reportsPaths=**/coverage/**/*.opencover.xml
+            -Dsonar.qualitygate.wait=true
 
-  # 5. Build & Push Docker Image (seulement sur main/develop)
+  # 5. Build & Push Docker Image
   docker:
     needs: quality
     if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
@@ -147,16 +153,3 @@ jobs:
             ghcr.io/$$ {{ github.repository_owner }}/ $${{ github.event.repository.name }}:latest
             ghcr.io/$$ {{ github.repository_owner }}/ $${{ github.event.repository.name }}:${{ github.sha }}
             ghcr.io/$$ {{ github.repository_owner }}/ $${{ github.event.repository.name }}:${{ github.ref_name == 'main' && 'stable' || 'dev' }}
-
-  # 6. Notification (optionnel)
-  notify:
-    needs: [test, docker]
-    if: failure()
-    runs-on: ubuntu-latest
-    steps:
-      - name: Slack Notification
-        uses: slackapi/slack-github-action@v1.26.0
-        with:
-          payload: '{"text": "TaskFlow CI/CD failed! Check: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"}'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

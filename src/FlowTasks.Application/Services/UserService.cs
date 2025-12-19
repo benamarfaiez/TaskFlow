@@ -1,7 +1,7 @@
 using FlowTasks.Application.DTOs;
 using FlowTasks.Application.Interfaces;
 using FlowTasks.Domain.Entities;
-using FlowTasks.Infrastructure.Repositories;
+using FlowTasks.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 

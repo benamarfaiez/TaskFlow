@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace FlowTasks.Infrastructure.Repositories;
+namespace FlowTasks.Infrastructure.Interfaces;
 
 public interface IRepository<T> where T : class
 {

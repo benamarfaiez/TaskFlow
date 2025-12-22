@@ -138,24 +138,21 @@ public class ProjectMemberRepositoryTests : IDisposable
         var projectId = _fixture.Create<string>();
         var members = new List<ProjectMember>
         {
-            new ProjectMember
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 ProjectId = projectId,
                 UserId = _fixture.Create<string>(),
                 Role = ProjectRole.Member,
                 JoinedAt = DateTime.UtcNow
             },
-            new ProjectMember
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 ProjectId = projectId,
                 UserId = _fixture.Create<string>(),
                 Role = ProjectRole.Member,
                 JoinedAt = DateTime.UtcNow
             },
-            new ProjectMember
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 ProjectId = projectId,
                 UserId = _fixture.Create<string>(),
@@ -198,24 +195,21 @@ public class ProjectMemberRepositoryTests : IDisposable
         var projectId2 = _fixture.Create<string>();
         var members = new List<ProjectMember>
         {
-            new ProjectMember
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 ProjectId = projectId1,
                 UserId = _fixture.Create<string>(),
                 Role = ProjectRole.Member,
                 JoinedAt = DateTime.UtcNow
             },
-            new ProjectMember
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 ProjectId = projectId1,
                 UserId = _fixture.Create<string>(),
                 Role = ProjectRole.Member,
                 JoinedAt = DateTime.UtcNow
             },
-            new ProjectMember
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 ProjectId = projectId2,
                 UserId = _fixture.Create<string>(),
@@ -315,8 +309,7 @@ public class ProjectMemberRepositoryTests : IDisposable
         };
         var members = new List<ProjectMember>
         {
-            new ProjectMember
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 ProjectId = projectId,
                 UserId = user1.Id,
@@ -324,8 +317,7 @@ public class ProjectMemberRepositoryTests : IDisposable
                 JoinedAt = DateTime.UtcNow,
                 User = user1
             },
-            new ProjectMember
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 ProjectId = projectId,
                 UserId = user2.Id,
@@ -360,16 +352,14 @@ public class ProjectMemberRepositoryTests : IDisposable
         var userId = _fixture.Create<string>();
         var members = new List<ProjectMember>
         {
-            new ProjectMember
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 ProjectId = _fixture.Create<string>(),
                 UserId = userId,
                 Role = ProjectRole.Member,
                 JoinedAt = DateTime.UtcNow
             },
-            new ProjectMember
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 ProjectId = _fixture.Create<string>(),
                 UserId = userId,
@@ -412,24 +402,21 @@ public class ProjectMemberRepositoryTests : IDisposable
         var userId2 = _fixture.Create<string>();
         var members = new List<ProjectMember>
         {
-            new ProjectMember
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 ProjectId = _fixture.Create<string>(),
                 UserId = userId1,
                 Role = ProjectRole.Member,
                 JoinedAt = DateTime.UtcNow
             },
-            new ProjectMember
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 ProjectId = _fixture.Create<string>(),
                 UserId = userId1,
                 Role = ProjectRole.Member,
                 JoinedAt = DateTime.UtcNow
             },
-            new ProjectMember
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 ProjectId = _fixture.Create<string>(),
                 UserId = userId2,

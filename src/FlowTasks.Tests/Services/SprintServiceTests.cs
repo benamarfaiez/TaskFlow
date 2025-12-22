@@ -1,5 +1,3 @@
-using AutoFixture;
-using AutoFixture.AutoMoq;
 using FlowTasks.Application.DTOs;
 using FlowTasks.Application.Interfaces;
 using FlowTasks.Application.Services;
@@ -194,7 +192,7 @@ public class SprintServiceTests
 
         _sprintRepositoryMock
             .Setup(x => x.GetAllAsync(It.IsAny<Expression<Func<Sprint, bool>>>(), default))
-            .ReturnsAsync(new List<Sprint>());
+            .ReturnsAsync([]);
 
         // Act
         var result = await _sprintService.GetByProjectIdAsync(projectId, userId);

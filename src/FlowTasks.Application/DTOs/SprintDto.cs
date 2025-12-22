@@ -2,8 +2,8 @@ namespace FlowTasks.Application.DTOs;
 
 public class SprintDto
 {
-    public string Id { get; set; }
-    public string ProjectId { get; set; }
+    public required string Id { get; set; }
+    public required string ProjectId { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Goal { get; set; }
     public DateTime StartDate { get; set; }

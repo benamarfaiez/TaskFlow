@@ -6,26 +6,16 @@ using FlowTasks.Application.DTOs;
 using FlowTasks.Application.DTOs.Auth;
 using FlowTasks.Application.Interfaces;
 using FlowTasks.Domain.Entities;
-using FlowTasks.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace FlowTasks.Application.Services;
 
-public class AuthService : IAuthService
+public class AuthService(UserManager<User> userManager, IConfiguration configuration) : IAuthService
 {
-    private readonly UserManager<User> _userManager;
-    private readonly IConfiguration _configuration;
-
-    public AuthService(
-        UserManager<User> userManager,
-        IUnitOfWork unitOfWork,
-        IConfiguration configuration)
-    {
-        _userManager = userManager;
-        _configuration = configuration;
-    }
+    private readonly UserManager<User> _userManager = userManager;
+    private readonly IConfiguration _configuration = configuration;
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
@@ -89,13 +79,8 @@ public class AuthService : IAuthService
     public async Task<LoginResponse> RefreshTokenAsync(RefreshTokenRequest request)
     {
         var principal = GetPrincipalFromExpiredToken(request.Token);
-        var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+        var userId = principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? throw new UnauthorizedAccessException("Invalid token");
         
-        if (userId == null)
-        {
-            throw new UnauthorizedAccessException("Invalid token");
-        }
-
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
         {
@@ -131,11 +116,7 @@ public class AuthService : IAuthService
 
     public async Task ChangePasswordAsync(string userId, ChangePasswordRequest request)
     {
-        var user = await _userManager.FindByIdAsync(userId);
-        if (user == null)
-        {
-            throw new InvalidOperationException("User not found");
-        }
+        var user = await _userManager.FindByIdAsync(userId) ?? throw new InvalidOperationException("User not found");
 
         var result = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
         if (!result.Succeeded)
@@ -173,7 +154,7 @@ public class AuthService : IAuthService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    private string GenerateRefreshToken()
+    private static string GenerateRefreshToken()
     {
         var randomNumber = new byte[64];
         using var rng = RandomNumberGenerator.Create();
@@ -205,7 +186,7 @@ public class AuthService : IAuthService
         return principal;
     }
 
-    private UserDto MapToUserDto(User user)
+    private static UserDto MapToUserDto(User user)
     {
         return new UserDto
         {

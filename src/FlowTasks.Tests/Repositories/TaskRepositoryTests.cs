@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -125,7 +124,7 @@ public class TaskRepositoryTests : IDisposable
         await _context.Tasks.AddAsync(taskProject);
         await _context.SaveChangesAsync();
         var task = await _repository.GetByKeyAsync(projectKey);
-        
+
         // Act
         var result = await _repository.GetByIdWithDetailsAsync(task.Id);
 
@@ -146,8 +145,7 @@ public class TaskRepositoryTests : IDisposable
         var projectId = "PROJ-001";
 
         var listTaskProject = new List<TaskProject> {
-            new TaskProject
-            {
+            new() {
                 ProjectId = projectId,
 
                 Key = "45815",
@@ -167,8 +165,7 @@ public class TaskRepositoryTests : IDisposable
                 SprintId = "sprint-15",
                 EpicId = "FLOW-300",
             },
-            new TaskProject
-            {
+            new() {
                 ProjectId = projectId,
 
                 Key = "89546",
@@ -194,7 +191,7 @@ public class TaskRepositoryTests : IDisposable
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(result.ToList().Count, listTaskProject.Count);    
+        Assert.Equal(result.ToList().Count, listTaskProject.Count);
     }
 
     [Fact]
@@ -204,8 +201,7 @@ public class TaskRepositoryTests : IDisposable
         var assigneeId = "5623-001";
 
         var listTaskProject = new List<TaskProject> {
-            new TaskProject
-            {
+            new() {
                 ProjectId = "8552123",
 
                 Key = "45815",
@@ -225,8 +221,7 @@ public class TaskRepositoryTests : IDisposable
                 SprintId = "sprint-15",
                 EpicId = "FLOW-300",
             },
-            new TaskProject
-            {
+            new() {
                 ProjectId = "8721",
 
                 Key = "89546",
@@ -261,8 +256,7 @@ public class TaskRepositoryTests : IDisposable
         // Arrange
         var sprintId = "sprint-999";
         var listTaskProject = new List<TaskProject> {
-            new TaskProject
-            {
+            new() {
                 ProjectId = "5423",
 
                 Key = "45815",
@@ -282,8 +276,7 @@ public class TaskRepositoryTests : IDisposable
                 SprintId = sprintId,
                 EpicId = "FLOW-300",
             },
-            new TaskProject
-            {
+            new() {
                 ProjectId = "7821",
 
                 Key = "89546",

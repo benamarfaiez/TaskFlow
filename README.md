@@ -237,12 +237,3 @@ Pour utiliser PostgreSQL avec Docker :
 ```bash
 docker run --name flowtasks-postgres -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=FlowTasksDB -p 5432:5432 -d postgres:15
 ```
-
-## 📄 Licence
-
-Ce projet est fourni tel quel pour usage éducatif et de démonstration.
-
-## 🤝 Contribution
-
-Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
-

@@ -1,0 +1,28 @@
+<mat-nav-list>
+    <div mat-subheader>Menu</div>
+
+    <a mat-list-item routerLink="/dashboard" routerLinkActive="active-link" (click)="closeSidebar.emit()">
+        <mat-icon matListItemIcon>dashboard</mat-icon>
+        <div matListItemTitle>Dashboard</div>
+    </a>
+
+    <a mat-list-item routerLink="/projects" routerLinkActive="active-link" (click)="closeSidebar.emit()">
+        <mat-icon matListItemIcon>folder</mat-icon>
+        <div matListItemTitle>Projects</div>
+    </a>
+
+    <div mat-subheader>My Work</div>
+
+    <a mat-list-item routerLink="/tasks" routerLinkActive="active-link" (click)="closeSidebar.emit()">
+        <mat-icon matListItemIcon>check_circle</mat-icon>
+        <div matListItemTitle>My Tasks</div>
+    </a>
+
+    <mat-divider></mat-divider>
+
+    <a mat-list-item routerLink="/profile" routerLinkActive="active-link" (click)="closeSidebar.emit()">
+        <mat-icon matListItemIcon>person</mat-icon>
+        <div matListItemTitle>Profile</div>
+    </a>
+
+</mat-nav-list>

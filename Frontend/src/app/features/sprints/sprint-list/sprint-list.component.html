@@ -1,0 +1,21 @@
+<div class="sprint-list-container">
+    <div class="header">
+        <h2>Sprints</h2>
+        <button mat-raised-button color="primary">Start Sprint</button>
+    </div>
+
+    <mat-list>
+        <div mat-subheader>Active</div>
+        <mat-list-item *ngFor="let sprint of activeSprints$ | async">
+            <mat-icon matListItemIcon>directions_run</mat-icon>
+            <div matListItemTitle>{{ sprint.name }}</div>
+            <div matListItemLine>{{ sprint.startDate | date }} - {{ sprint.endDate | date }}</div>
+        </mat-list-item>
+
+        <div mat-subheader>Future</div>
+        <mat-list-item *ngFor="let sprint of futureSprints$ | async">
+            <mat-icon matListItemIcon>event_note</mat-icon>
+            <div matListItemTitle>{{ sprint.name }}</div>
+        </mat-list-item>
+    </mat-list>
+</div>

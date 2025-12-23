@@ -1,0 +1,22 @@
+.project-detail-container {
+    padding: 1rem;
+}
+
+.project-header {
+    margin-bottom: 2rem;
+
+    h1 {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    p {
+        color: rgba(0, 0, 0, 0.6);
+    }
+}
+
+.loading-spinner {
+    display: flex;
+    justify-content: center;
+    padding: 3rem;
+}

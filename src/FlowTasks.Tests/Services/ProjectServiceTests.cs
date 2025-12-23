@@ -1,10 +1,8 @@
 ﻿using AutoFixture;
 using AutoFixture.Xunit2;
 using FlowTasks.Application.DTOs;
-using FlowTasks.Application.Interfaces;
 using FlowTasks.Application.Services;
 using FlowTasks.Domain.Entities;
-using FlowTasks.Domain.Enums;
 using FlowTasks.Infrastructure.Interfaces;
 using FlowTasks.Tests.Common;
 using MockQueryable.Moq;
@@ -47,9 +45,9 @@ public class ProjectServiceTests : TestBase
         // Act & Assert
         await Assert.ThrowsAsync<InvalidOperationException>(
             () => _sut.CreateAsync(userId, request));
-	}
+    }
 
-	[Fact]
+    [Fact]
     public async Task CreateAsync_EmptyName_ShouldThrowArgumentException()
     {
         Fixture.Customize(new EfCoreCustomization());

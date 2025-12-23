@@ -12,7 +12,7 @@ public class TaskProject
     public TaskType Type { get; set; } = TaskType.Task;
     public TaskStatus Status { get; set; } = TaskStatus.ToDo;
     public TaskPriority Priority { get; set; } = TaskPriority.Medium;
-    public string ProjectId { get; set; }
+    public required string ProjectId { get; set; }
     public string? AssigneeId { get; set; }
     public string ReporterId { get; set; } = string.Empty;
     public DateTime? DueDate { get; set; }
@@ -31,8 +31,8 @@ public class TaskProject
     public Sprint? Sprint { get; set; }
     public TaskProject? Epic { get; set; }
     public TaskProject? Parent { get; set; }
-    public ICollection<TaskProject> Subtasks { get; set; } = new List<TaskProject>();
-    public ICollection<TaskComment> Comments { get; set; } = new List<TaskComment>();
-    public ICollection<TaskHistory> History { get; set; } = new List<TaskHistory>();
+    public ICollection<TaskProject> Subtasks { get; set; } = [];
+    public ICollection<TaskComment> Comments { get; set; } = [];
+    public ICollection<TaskHistory> History { get; set; } = [];
 }
 

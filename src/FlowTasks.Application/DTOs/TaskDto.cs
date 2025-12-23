@@ -5,14 +5,14 @@ namespace FlowTasks.Application.DTOs;
 
 public class TaskDto
 {
-    public string Id { get; set; }
+    public required string Id { get; set; }
     public string Key { get; set; } = string.Empty;
     public string Summary { get; set; } = string.Empty;
     public string? Description { get; set; }
     public TaskType Type { get; set; }
     public TaskStatus Status { get; set; }
     public TaskPriority Priority { get; set; }
-    public string ProjectId { get; set; }
+    public required string ProjectId { get; set; }
     public string? AssigneeId { get; set; }
     public UserDto? Assignee { get; set; }
     public string ReporterId { get; set; } = string.Empty;

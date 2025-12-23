@@ -92,8 +92,7 @@ public class ProjectRepositoryTests : IDisposable
         // Arrange
         var projects = new List<Project>
         {
-            new Project
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 Key = "PROJ-001",
                 Name = "Project 1",
@@ -101,8 +100,7 @@ public class ProjectRepositoryTests : IDisposable
                 OwnerId = _fixture.Create<string>(),
                 CreatedAt = DateTime.UtcNow
             },
-            new Project
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 Key = "PROJ-002",
                 Name = "Project 2",
@@ -110,8 +108,7 @@ public class ProjectRepositoryTests : IDisposable
                 OwnerId = _fixture.Create<string>(),
                 CreatedAt = DateTime.UtcNow
             },
-            new Project
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 Key = "PROJ-003",
                 Name = "Project 3",
@@ -326,16 +323,14 @@ public class ProjectRepositoryTests : IDisposable
         };
         var tasks = new List<TaskProject>
         {
-            new TaskProject
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 Description = "Description 1",
                 ProjectId = project.Id,
                 Priority = TaskPriority.Medium,
                 CreatedAt = DateTime.UtcNow
             },
-            new TaskProject
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 Description = "Description 2",
                 ProjectId = project.Id,
@@ -383,8 +378,7 @@ public class ProjectRepositoryTests : IDisposable
         };
         var sprints = new List<Sprint>
         {
-            new Sprint
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 Name = "Sprint 1",
                 Goal = "Sprint 1 Goal",
@@ -393,8 +387,7 @@ public class ProjectRepositoryTests : IDisposable
                 EndDate = DateTime.UtcNow.AddDays(14),
                 CreatedAt = DateTime.UtcNow
             },
-            new Sprint
-            {
+            new() {
                 Id = _fixture.Create<string>(),
                 Name = "Sprint 2",
                 Goal = "Sprint 2 Goal",

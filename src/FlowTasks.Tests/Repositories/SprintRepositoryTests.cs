@@ -1,11 +1,9 @@
 ﻿using AutoFixture;
 using FlowTasks.Domain.Entities;
-using FlowTasks.Domain.Enums;
 using FlowTasks.Infrastructure.Data;
 using FlowTasks.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;

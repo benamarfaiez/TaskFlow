@@ -3,7 +3,7 @@ namespace FlowTasks.Domain.Entities;
 public class TaskComment
 {
     public string Id { get; set; } = Guid.NewGuid().ToString();
-    public string TaskId { get; set; }
+    public required string TaskId { get; set; }
     public string UserId { get; set; } = string.Empty;
     public string Content { get; set; } = string.Empty;
     public string? Mentions { get; set; } // JSON array of user IDs

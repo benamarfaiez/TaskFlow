@@ -1,14 +1,10 @@
-using AutoFixture;
-using AutoFixture.AutoMoq;
 using FlowTasks.Application.DTOs.Auth;
 using FlowTasks.Application.Services;
 using FlowTasks.Domain.Entities;
-using FlowTasks.Infrastructure.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Moq;
 using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
@@ -19,23 +15,18 @@ namespace FlowTasks.Tests.Services;
 
 public class AuthServiceTests
 {
-    private readonly IFixture _fixture;
     private readonly Mock<UserManager<User>> _userManagerMock;
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IConfiguration> _configurationMock;
     private readonly AuthService _authService;
 
     public AuthServiceTests()
     {
-        _fixture = new Fixture().Customize(new AutoMoqCustomization());
-
         // Configuration du UserManager Mock
         var userStoreMock = new Mock<IUserStore<User>>();
         _userManagerMock = new Mock<UserManager<User>>(
-            userStoreMock.Object,
-            null, null, null, null, null, null, null, null);
+            userStoreMock.Object, null, null, null, null, null, null, null, null
+           );
 
-        _unitOfWorkMock = _fixture.Freeze<Mock<IUnitOfWork>>();
         _configurationMock = new Mock<IConfiguration>();
 
         // Configuration des valeurs JWT
@@ -43,7 +34,6 @@ public class AuthServiceTests
 
         _authService = new AuthService(
             _userManagerMock.Object,
-            _unitOfWorkMock.Object,
             _configurationMock.Object);
     }
 
@@ -83,7 +73,7 @@ public class AuthServiceTests
         _userManagerMock.Setup(x => x.CheckPasswordAsync(user, request.Password))
             .ReturnsAsync(true);
         _userManagerMock.Setup(x => x.GetRolesAsync(user))
-            .ReturnsAsync(new List<string> { "User" });
+            .ReturnsAsync(["User"]);
         _userManagerMock.Setup(x => x.UpdateAsync(It.IsAny<User>()))
             .ReturnsAsync(IdentityResult.Success);
 
@@ -176,7 +166,7 @@ public class AuthServiceTests
         _userManagerMock.Setup(x => x.CheckPasswordAsync(user, request.Password))
             .ReturnsAsync(true);
         _userManagerMock.Setup(x => x.GetRolesAsync(user))
-            .ReturnsAsync(new List<string> { "User" });
+            .ReturnsAsync(["User"]);
         _userManagerMock.Setup(x => x.UpdateAsync(It.IsAny<User>()))
             .ReturnsAsync(IdentityResult.Success);
 
@@ -213,7 +203,7 @@ public class AuthServiceTests
         _userManagerMock.Setup(x => x.AddToRoleAsync(It.IsAny<User>(), "User"))
             .ReturnsAsync(IdentityResult.Success);
         _userManagerMock.Setup(x => x.GetRolesAsync(It.IsAny<User>()))
-            .ReturnsAsync(new List<string> { "User" });
+            .ReturnsAsync(["User"]);
         _userManagerMock.Setup(x => x.UpdateAsync(It.IsAny<User>()))
             .ReturnsAsync(IdentityResult.Success);
 
@@ -288,7 +278,7 @@ public class AuthServiceTests
         _userManagerMock.Setup(x => x.AddToRoleAsync(It.IsAny<User>(), "User"))
             .ReturnsAsync(IdentityResult.Success);
         _userManagerMock.Setup(x => x.GetRolesAsync(It.IsAny<User>()))
-            .ReturnsAsync(new List<string> { "User" });
+            .ReturnsAsync(["User"]);
         _userManagerMock.Setup(x => x.UpdateAsync(It.IsAny<User>()))
             .ReturnsAsync(IdentityResult.Success);
 
@@ -348,7 +338,7 @@ public class AuthServiceTests
         _userManagerMock.Setup(x => x.FindByIdAsync(userId))
             .ReturnsAsync(user);
         _userManagerMock.Setup(x => x.GetRolesAsync(user))
-            .ReturnsAsync(new List<string> { "User" });
+            .ReturnsAsync(["User"]);
         _userManagerMock.Setup(x => x.UpdateAsync(It.IsAny<User>()))
             .ReturnsAsync(IdentityResult.Success);
 
@@ -657,7 +647,7 @@ public class AuthServiceTests
         _userManagerMock.Setup(x => x.CheckPasswordAsync(user, request.Password))
             .ReturnsAsync(true);
         _userManagerMock.Setup(x => x.GetRolesAsync(user))
-            .ReturnsAsync(new List<string>());
+            .ReturnsAsync([]);
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(

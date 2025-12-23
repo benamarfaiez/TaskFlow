@@ -45,10 +45,10 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore ./Backend/FlowTasks.sln
 
       - name: Build
-        run: dotnet build --configuration Release --no-restore
+        run: dotnet build ./Backend/FlowTasks.sln --configuration Release --no-restore
 
   # 3. Unit Tests + Coverage
   test:
@@ -74,13 +74,13 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore ./Backend/FlowTasks.sln
 
       - name: Run Unit Tests + Coverage
         env:
           ConnectionStrings__DefaultConnection: Server=localhost;Port=5432;Database=taskflow_test;User Id=postgres;Password=postgres;
         run: |
-          dotnet test --configuration Release --collect:"XPlat Code Coverage" --results-directory:./coverage --logger "trx;LogFileName=test-results.trx"
+          dotnet test ./Backend/FlowTasks.sln --configuration Release --collect:"XPlat Code Coverage" --results-directory:./coverage --logger "trx;LogFileName=test-results.trx"
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4

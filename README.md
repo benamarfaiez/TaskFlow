@@ -65,14 +65,13 @@ Modifiez `src/FlowTasks.API/appsettings.json` avec vos paramètres PostgreSQL :
 
 ```bash
 dotnet restore
-cd src/FlowTasks.API
-dotnet ef migrations add InitialCreate --project ../FlowTasks.Infrastructure
+dotnet ef migrations add FirstMigration --project FlowTasks.Infrastructure --startup-project FlowTasks.API --context ApplicationDbContext
 ```
 
 ### 5. Appliquer les migrations et créer la base de données
 
 ```bash
-dotnet ef database update
+dotnet ef database update --project FlowTasks.Infrastructure --startup-project FlowTasks.API --context ApplicationDbContext
 ```
 
 ### 6. Lancer l'API

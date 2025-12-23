@@ -1,0 +1,25 @@
+.app-container {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidenav-container {
+    flex: 1;
+}
+
+.sidenav {
+    width: 250px;
+    border-right: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.main-content {
+    padding: 20px;
+    height: calc(100vh - 64px); // Minus navbar height
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+
+mat-sidenav-content {
+    transition: margin-left 0.2s ease-in-out;
+}

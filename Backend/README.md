@@ -1,6 +1,6 @@
 # FlowTasks - Backend API
 
-Backend complet pour une application de gestion de projets et de tâches similaire à Jira, développé avec .NET 8.
+Backend complet pour une application de gestion de projets et de tâches, développé avec .NET 8.
 
 ## 🚀 Stack Technique
 

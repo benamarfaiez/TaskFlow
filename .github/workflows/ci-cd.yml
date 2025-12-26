@@ -10,7 +10,7 @@ jobs:
   # 1. Checkout + Setup .NET
   setup-backend:
     runs-on: ubuntu-latest
-    if: contains(github.event.commits.*.modified, 'Backend/') || contains(github.event.commits.*.added, 'Backend/') || contains(github.event.commits.*.removed, 'Backend/')
+    if: contains(github.event.commits.*.modified, '../Backend/') || contains(github.event.commits.*.added, '../Backend/') || contains(github.event.commits.*.removed, '../Backend/')
     outputs:
       cache-key: ${{ steps.cache.outputs.cache-key }}
     steps:
@@ -36,7 +36,7 @@ jobs:
   build-backend:
     needs: setup-backend
     runs-on: ubuntu-latest
-    if: contains(github.event.commits.*.modified, 'Backend/') || contains(github.event.commits.*.added, 'Backend/') || contains(github.event.commits.*.removed, 'Backend/')
+    if: contains(github.event.commits.*.modified, '../Backend/') || contains(github.event.commits.*.added, '../Backend/') || contains(github.event.commits.*.removed, '../Backend/')
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -56,7 +56,7 @@ jobs:
   test-backend:
     needs: build-backend
     runs-on: ubuntu-latest
-    if: contains(github.event.commits.*.modified, 'Backend/') || contains(github.event.commits.*.added, 'Backend/') || contains(github.event.commits.*.removed, 'Backend/')
+    if: contains(github.event.commits.*.modified, '../Backend/') || contains(github.event.commits.*.added, '../Backend/') || contains(github.event.commits.*.removed, '../Backend/')
     services:
       postgres:
         image: postgres:16-alpine
@@ -103,7 +103,7 @@ jobs:
   quality-backend:
     needs: test-backend
     runs-on: ubuntu-latest
-    if: contains(github.event.commits.*.modified, 'Backend/') || contains(github.event.commits.*.added, 'Backend/') || contains(github.event.commits.*.removed, 'Backend/')
+    if: contains(github.event.commits.*.modified, '../Backend/') || contains(github.event.commits.*.added, '../Backend/') || contains(github.event.commits.*.removed, '../Backend/')
     steps:
       - name: Checkout code
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332

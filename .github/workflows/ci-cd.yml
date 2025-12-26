@@ -15,9 +15,29 @@ on:
       - '.github/workflows/**'
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'Backend/**'
+              - 'Backend/Dockerfile'
+            frontend:
+              - 'Frontend/**'
+              - 'Frontend/Dockerfile'
+
   # 1. Checkout + Setup .NET
   setup-backend:
     runs-on: ubuntu-latest
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
     outputs:
       cache-key: ${{ steps.cache.outputs.cache-key }}
     steps:
@@ -164,6 +184,8 @@ jobs:
 # ======================== FRONTEND JOBS ========================
 
   setup-frontend:
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code

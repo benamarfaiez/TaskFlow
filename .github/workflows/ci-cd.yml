@@ -151,7 +151,7 @@ jobs:
 
   # 5. Build & Push Docker Image
   docker-backend:
-    needs: quality-backend
+    needs: test-backend
     runs-on: ubuntu-latest
     permissions:
       packages: write

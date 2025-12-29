@@ -1,5 +1,4 @@
 import { User } from './auth.models';
-import { Task } from './task.model';
 
 export interface Project {
     id: string;

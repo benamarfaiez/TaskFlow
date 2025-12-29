@@ -7,7 +7,7 @@ import { MatSnackBar, MatSnackBarConfig } from '@angular/material/snack-bar';
 export class ToastService {
     private snackBar = inject(MatSnackBar);
 
-    show(message: string, action: string = 'Close', config?: MatSnackBarConfig) {
+    show(message: string, action = 'Close', config?: MatSnackBarConfig) {
         this.snackBar.open(message, action, {
             duration: 3000,
             horizontalPosition: 'end',

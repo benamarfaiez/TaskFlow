@@ -24,5 +24,5 @@ import { ProjectsService } from '../projects/projects.service';
 export class DashboardComponent {
     private projectsService = inject(ProjectsService);
 
-    projects$ = this.projectsService.getAll();
+    projects = this.projectsService.getAll();
 }

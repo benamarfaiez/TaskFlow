@@ -6,6 +6,7 @@ COPY Backend/FlowTasks.sln ./
 COPY Backend/src/FlowTasks.API/FlowTasks.API.csproj ./src/FlowTasks.API/
 COPY Backend/src/FlowTasks.Application/FlowTasks.Application.csproj ./src/FlowTasks.Application/
 COPY Backend/src/FlowTasks.Domain/FlowTasks.Domain.csproj ./src/FlowTasks.Domain/
+COPY Backend/src/FlowTasks.Tests/FlowTasks.Tests.csproj ./src/FlowTasks.Tests/
 COPY Backend/src/FlowTasks.Infrastructure/FlowTasks.Infrastructure.csproj ./src/FlowTasks.Infrastructure/
 
 RUN dotnet restore
@@ -14,6 +15,7 @@ COPY Backend/src/FlowTasks.API/. ./src/FlowTasks.API/
 COPY Backend/src/FlowTasks.Application/. ./src/FlowTasks.Application/
 COPY Backend/src/FlowTasks.Domain/. ./src/FlowTasks.Domain/
 COPY Backend/src/FlowTasks.Infrastructure/. ./src/FlowTasks.Infrastructure/
+COPY Backend/src/FlowTasks.Tests/. ./src/FlowTasks.Tests/
 
 # Build & Publish l'API
 WORKDIR /app/src/FlowTasks.API

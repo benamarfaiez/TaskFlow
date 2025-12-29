@@ -61,9 +61,10 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+var dbConnectin = builder.Configuration["DbConnection"];
 // Database configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(dbConnectin));
 
 // Identity configuration
 builder.Services.AddIdentity<User, IdentityRole>(options =>
@@ -90,7 +91,7 @@ builder.Services.AddHealthChecksUI(setup =>
 .AddInMemoryStorage();
 
 // JWT Authentication
-var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
+var jwtKey = builder.Configuration["JwtKey"] ?? throw new InvalidOperationException("JWT Key not configured");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "FlowTasks";
 var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "FlowTasks";
 
@@ -115,12 +116,13 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
+var UrlFrontend = builder.Configuration["UrlFrontend"];
 // CORS configuration
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins(UrlFrontend)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();

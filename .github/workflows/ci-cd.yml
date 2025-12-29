@@ -151,7 +151,7 @@ jobs:
 
   # 5. Build & Push Docker Image
   docker-backend:
-    needs: test-backend
+    needs: build-backend
     runs-on: ubuntu-latest
     permissions:
       packages: write
@@ -177,9 +177,9 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/taskFlow:latest
-            ghcr.io/${{ github.repository_owner }}/taskFlow:${{ github.sha }}
-            ghcr.io/${{ github.repository_owner }}/taskFlow:${{ github.ref_name == 'main' && 'stable' || 'dev' }}
+            ghcr.io/${{ github.repository_owner }}/taskflow:latest
+            ghcr.io/${{ github.repository_owner }}/taskflow:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/taskflow:${{ github.ref_name == 'main' && 'stable' || 'dev' }}
 
 # ======================== FRONTEND JOBS ========================
 

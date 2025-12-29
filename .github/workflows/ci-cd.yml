@@ -202,8 +202,8 @@ jobs:
       - name: Install dependencies
         run: cd Frontend && npm ci --legacy-peer-deps
 
-      - name: Lint
-        run: cd Frontend && npm run lint
+      - name: Lint Frontend
+        run: cd Frontend && npm install && npx ng lint
 
       # Décommente si tu ajoutes des tests Angular
       # - name: Run tests

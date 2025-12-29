@@ -1,31 +1,29 @@
+# Étape de build
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+WORKDIR /app
 
-COPY *.sln .
-COPY FlowTasks.API/*.csproj ./FlowTasks.API/
-COPY FlowTasks.Application/*.csproj ./FlowTasks.Application/
-COPY FlowTasks.Domain/*.csproj ./FlowTasks.Domain/
-COPY FlowTasks.Infrastructure/*.csproj ./FlowTasks.Infrastructure/
+# Copie le fichier .sln et .csproj d'abord pour restaurer les dépendances (meilleur caching)
+COPY Backend/*.sln ./
+COPY Backend/src/FlowTasks.API/FlowTasks.API.csproj ./src/FlowTasks.API/
+COPY Backend/src/FlowTasks.Application/FlowTasks.Application.csproj ./src/FlowTasks.Application/
+COPY Backend/src/FlowTasks.Domain/FlowTasks.Domain.csproj ./src/FlowTasks.Domain/
+COPY Backend/src/FlowTasks.Infrastructure/FlowTasks.Infrastructure.csproj ./src/FlowTasks.Infrastructure/
 
-# Restore les dépendances
+# Restore
 RUN dotnet restore
 
-# Copie tout le code source
-COPY FlowTasks.API/. ./FlowTasks.API/
-COPY FlowTasks.Application/. ./FlowTasks.Application/
-COPY FlowTasks.Domain/. ./FlowTasks.Domain/
-COPY FlowTasks.Infrastructure/. ./FlowTasks.Infrastructure/
+# Copie maintenant tout le code source
+COPY Backend/src/FlowTasks.API/. ./src/FlowTasks.API/
+COPY Backend/src/FlowTasks.Application/. ./src/FlowTasks.Application/
+COPY Backend/src/FlowTasks.Domain/. ./src/FlowTasks.Domain/
+COPY Backend/src/FlowTasks.Infrastructure/. ./src/FlowTasks.Infrastructure/
 
-# Build & Publish le projet API
-WORKDIR /src/FlowTasks.API
+# Build & Publish l'API
+WORKDIR /app/src/FlowTasks.API
 RUN dotnet publish -c Release -o /app/publish --no-restore
 
-# Runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+# Étape runtime
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish .
-
-ENV ASPNETCORE_URLS=http://+:8080
-EXPOSE 8080
-
 ENTRYPOINT ["dotnet", "FlowTasks.API.dll"]

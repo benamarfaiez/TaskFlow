@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
+using System.Data.Common;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -61,10 +62,14 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-var dbConnectin = builder.Configuration["DbConnection"];
+var dbConnection = builder.Configuration["DbConnection"];
+if (string.IsNullOrWhiteSpace(dbConnection))
+{
+    Log.Error("DbConnection est vide ou manquante dans la configuration !");
+}
 // Database configuration
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(dbConnectin));
+    options.UseNpgsql(dbConnection));
 
 // Identity configuration
 builder.Services.AddIdentity<User, IdentityRole>(options =>

@@ -62,7 +62,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-var dbConnection = builder.Configuration["DbConnection"];
+var dbConnection = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(dbConnection))
 {
     Log.Error("DbConnection est vide ou manquante dans la configuration !");

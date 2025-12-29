@@ -2,17 +2,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /app
 
-# Copie le fichier .sln et .csproj d'abord pour restaurer les dépendances (meilleur caching)
-COPY Backend/*.sln ./
+COPY Backend/FlowTasks.sln ./
 COPY Backend/src/FlowTasks.API/FlowTasks.API.csproj ./src/FlowTasks.API/
 COPY Backend/src/FlowTasks.Application/FlowTasks.Application.csproj ./src/FlowTasks.Application/
 COPY Backend/src/FlowTasks.Domain/FlowTasks.Domain.csproj ./src/FlowTasks.Domain/
 COPY Backend/src/FlowTasks.Infrastructure/FlowTasks.Infrastructure.csproj ./src/FlowTasks.Infrastructure/
 
-# Restore
 RUN dotnet restore
 
-# Copie maintenant tout le code source
 COPY Backend/src/FlowTasks.API/. ./src/FlowTasks.API/
 COPY Backend/src/FlowTasks.Application/. ./src/FlowTasks.Application/
 COPY Backend/src/FlowTasks.Domain/. ./src/FlowTasks.Domain/

@@ -82,14 +82,6 @@ builder.Services.AddIdentity<User, IdentityRole>(options =>
 builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>(name: "ApplicationDbContext Check");
 
-builder.Services.AddHealthChecksUI(setup =>
-{
-    setup.SetEvaluationTimeInSeconds(15);
-    setup.MaximumHistoryEntriesPerEndpoint(60);
-    setup.AddHealthCheckEndpoint("FlowTasks API", "/health");
-})
-.AddInMemoryStorage();
-
 // JWT Authentication
 var jwtKey = builder.Configuration["JwtKey"] ?? throw new InvalidOperationException("JWT Key not configured");
 var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "FlowTasks";

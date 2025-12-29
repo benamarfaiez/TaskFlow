@@ -10,23 +10,28 @@
                 <mat-form-field appearance="outline" class="full-width">
                     <mat-label>First Name</mat-label>
                     <input matInput formControlName="firstName" placeholder="John Doe">
-                    <mat-error *ngIf="registerForm.get('firstName')?.hasError('required')">First Name is
-                        required</mat-error>
+                    @if(registerForm.get('firstName')?.hasError('required')){
+                    <mat-error>First Name is required</mat-error>
+                    }
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="full-width">
                     <mat-label>Last Name</mat-label>
                     <input matInput formControlName="lastName" placeholder="Doe">
-                    <mat-error *ngIf="registerForm.get('lastName')?.hasError('required')">Last Name is
-                        required</mat-error>
+                    @if(registerForm.get('lastName')?.hasError('required')){
+                    <mat-error>Last Name is required</mat-error>
+                    }
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="full-width">
                     <mat-label>Email</mat-label>
                     <input matInput formControlName="email" type="email" placeholder="john@example.com">
-                    <mat-error *ngIf="registerForm.get('email')?.hasError('required')">Email is required</mat-error>
-                    <mat-error *ngIf="registerForm.get('email')?.hasError('email')">Please enter a valid
-                        email</mat-error>
+                    @if(registerForm.get('email')?.hasError('required')){
+                    <mat-error>Email is required</mat-error>
+                    }
+                    @if(registerForm.get('email')?.hasError('email')){
+                    <mat-error>Please enter a valid email</mat-error>
+                    }
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="full-width">
@@ -35,17 +40,22 @@
                     <button mat-icon-button matSuffix type="button" (click)="hidePassword = !hidePassword">
                         <mat-icon>{{hidePassword ? 'visibility_off' : 'visibility'}}</mat-icon>
                     </button>
-                    <mat-error *ngIf="registerForm.get('password')?.hasError('required')">Password is
-                        required</mat-error>
-                    <mat-error *ngIf="registerForm.get('password')?.hasError('minlength')">Password must be at least 6
-                        characters</mat-error>
+                    @if(registerForm.get('password')?.hasError('required')){
+                    <mat-error>Password is required</mat-error>
+                    }
+                    @if(registerForm.get('password')?.hasError('minlength')){
+                    <mat-error>Password must be at least 6 characters</mat-error>
+                    }
                 </mat-form-field>
 
                 <div class="form-actions">
                     <button mat-flat-button color="primary" type="submit"
                         [disabled]="registerForm.invalid || isLoading">
-                        <mat-spinner diameter="20" *ngIf="isLoading; else signupText"></mat-spinner>
-                        <ng-template #signupText>Sign Up</ng-template>
+                        @if(isLoading){
+                        <mat-spinner diameter="20"></mat-spinner>
+                        } @else{
+                        <span>Sign Up</span>
+                        }
                     </button>
                 </div>
             </form>

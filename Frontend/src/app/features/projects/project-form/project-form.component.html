@@ -9,7 +9,9 @@
                 <mat-form-field appearance="outline" class="full-width">
                     <mat-label>Project Name</mat-label>
                     <input matInput formControlName="name" placeholder="My Awesome Project">
-                    <mat-error *ngIf="projectForm.get('name')?.hasError('required')">Name is required</mat-error>
+                    @if(projectForm.get('name')?.hasError('required')){
+                    <mat-error>Name is required</mat-error>
+                    }
                 </mat-form-field>
 
                 <mat-form-field appearance="outline" class="full-width">

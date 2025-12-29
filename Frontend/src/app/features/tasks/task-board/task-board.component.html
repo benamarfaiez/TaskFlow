@@ -1,7 +1,9 @@
-<div class="board-container" *ngIf="board$ | async as board">
+@if(board$ | async; as board){
+<div class="board-container">
     <div class="board-wrapper" cdkDropListGroup>
 
-        <div class="board-column" *ngFor="let column of board.columns">
+        @for(column of board.columns; track column.status){
+        <div class="board-column">
             <div class="column-header">
                 <h3>{{ column.status | titlecase }}</h3>
                 <span class="task-count">{{ column.tasks.length }}</span>
@@ -9,21 +11,25 @@
 
             <div class="task-list" cdkDropList [cdkDropListData]="column.tasks"
                 (cdkDropListDropped)="drop($event, column.status)">
-
-                <div class="task-card" *ngFor="let task of column.tasks" cdkDrag>
+                @for(task of column.tasks; track task.id){
+                <div class="task-card" cdkDrag>
                     <div class="task-content">
                         <div class="task-title">{{ task.title }}</div>
                         <div class="task-meta">
                             <span class="priority" [class]="task.priority.toLowerCase()">{{ task.priority }}</span>
-                            <span class="assignee-avatar" *ngIf="task.assignee">
+
+                            @if(task.assignee){
+                            <span class="assignee-avatar">
                                 {{ task.assignee.fullName.charAt(0) }}
                             </span>
+                            }
                         </div>
                     </div>
                 </div>
-
+                }
             </div>
         </div>
-
+        }
     </div>
 </div>
+}

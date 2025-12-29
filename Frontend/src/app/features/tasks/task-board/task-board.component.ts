@@ -5,7 +5,7 @@ import { CdkDragDrop, moveItemInArray, transferArrayItem, DragDropModule } from 
 import { TasksService } from '../tasks.service';
 import { SignalRService } from '../../../core/services/signalr.service';
 import { Task, TaskStatus } from '../../../core/models/task.model';
-import { BehaviorSubject, Subscription, switchMap } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 
 @Component({
     selector: 'app-task-board',
@@ -47,7 +47,7 @@ export class TaskBoardComponent implements OnInit, OnDestroy {
         this.signalRService.joinProjectGroup(this.projectId);
 
         this.subscriptions.push(
-            this.signalRService.taskMoved$.subscribe(event => {
+            this.signalRService.taskMoved$.subscribe(() => {
                 // Handle realtime move update
                 // For simplicity, reload board or manually move item in local state
                 this.loadBoard();

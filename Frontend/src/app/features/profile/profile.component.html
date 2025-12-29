@@ -1,4 +1,5 @@
-<div class="profile-container" *ngIf="userSignal() as user">
+@if(userSignal(); as user){
+<div class="profile-container">
     <mat-card>
         <mat-card-header>
             <div mat-card-avatar class="profile-avatar">
@@ -32,3 +33,4 @@
         </mat-card-content>
     </mat-card>
 </div>
+}

@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, tap, BehaviorSubject, of, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, tap, BehaviorSubject, throwError } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { LoginDto, RegisterDto, AuthResponse, User, ChangePasswordDto } from '../models/auth.models';
 import { Router } from '@angular/router';
@@ -41,7 +41,6 @@ export class AuthService {
     }
 
     register(data: RegisterDto): Observable<AuthResponse> {
-        var x = data;
         return this.http.post<AuthResponse>(`${this.apiUrl}/register`, data).pipe(
             tap(response => this.handleAuthResponse(response))
         );

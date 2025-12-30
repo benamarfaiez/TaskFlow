@@ -88,9 +88,13 @@ builder.Services.AddHealthChecks()
     .AddDbContextCheck<ApplicationDbContext>(name: "ApplicationDbContext Check");
 
 // JWT Authentication
-var jwtKey = builder.Configuration["JwtKey"] ?? throw new InvalidOperationException("JWT Key not configured");
-var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? "FlowTasks";
-var jwtAudience = builder.Configuration["Jwt:Audience"] ?? "FlowTasks";
+var jwtKey = builder.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
+var jwtIssuer = builder.Configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured");
+var jwtAudience = builder.Configuration["Jwt:Audience"] ?? throw new InvalidOperationException("JWT Audience not configured");
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    Log.Error("jwt Key est vide ou manquante dans la configuration !");
+}
 
 builder.Services.AddAuthentication(options =>
 {
@@ -114,6 +118,10 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 var UrlFrontend = builder.Configuration["UrlFrontend"];
+if (string.IsNullOrWhiteSpace(UrlFrontend))
+{
+    Log.Error("UrlFrontend est vide ou manquante dans la configuration !");
+}
 // CORS configuration
 builder.Services.AddCors(options =>
 {

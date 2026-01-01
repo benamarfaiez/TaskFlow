@@ -205,5 +205,12 @@ if (app.Environment.IsDevelopment())
     }
 }
 
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "healthy",
+    service = "FlowTasks API",
+    time = DateTime.UtcNow
+}));
+
 app.Run();
 

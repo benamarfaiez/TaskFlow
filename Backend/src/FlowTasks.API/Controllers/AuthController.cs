@@ -7,7 +7,7 @@ using System.Security.Claims;
 namespace FlowTasks.API.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/auth/[controller]")]
 public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;

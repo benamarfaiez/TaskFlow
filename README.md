@@ -26,12 +26,6 @@ src/
 └─ FlowTasks.Infrastructure # DbContext, Repositories, SignalR Hub, Identity config
 ```
 
-## 🛠️ Prérequis
-
-- .NET 8 SDK
-- PostgreSQL 12+
-- Visual Studio 2022 / VS Code 
-
 ## 📦 Installation
 
 ### 1. Cloner le projet
@@ -230,7 +224,7 @@ Le seed initial crée :
 - 2 projets d'exemple
 - Plusieurs tâches d'exemple
 
-## 🐳 Docker (Optionnel)
+## 🐳 Docker
 
 Pour utiliser PostgreSQL avec Docker :
 

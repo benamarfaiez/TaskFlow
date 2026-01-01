@@ -138,6 +138,12 @@ builder.Services.AddScoped<ISprintService, SprintService>();
 builder.Services.AddScoped<IProjectMemberService, ProjectMemberService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
+var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Listen(System.Net.IPAddress.Any, int.Parse(port));  // Binds to 0.0.0.0:<PORT>
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline
@@ -165,21 +171,24 @@ app.MapHub<TaskHub>("/hubs/task");
 app.MapHealthChecks("/health");
 
 // Seed database
-using (var scope = app.Services.CreateScope())
+if (app.Environment.IsDevelopment())
 {
-    var services = scope.ServiceProvider;
-    try
+    using (var scope = app.Services.CreateScope())
     {
-        var context = services.GetRequiredService<ApplicationDbContext>();
-        var userManager = services.GetRequiredService<UserManager<User>>();
-        var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
-        
-        await context.Database.MigrateAsync();
-        await DbSeeder.SeedAsync(context, userManager, roleManager);
-    }
-    catch (Exception ex)
-    {
-        Log.Error(ex, "An error occurred while seeding the database.");
+        var services = scope.ServiceProvider;
+        try
+        {
+            var context = services.GetRequiredService<ApplicationDbContext>();
+            var userManager = services.GetRequiredService<UserManager<User>>();
+            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+            await context.Database.MigrateAsync();
+            await DbSeeder.SeedAsync(context, userManager, roleManager);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while seeding the database.");
+        }
     }
 }
 

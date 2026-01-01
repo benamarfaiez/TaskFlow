@@ -1,5 +1,5 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:5000/api',
-  signalRUrl: 'http://localhost:5000/hubs/task'
+  apiUrl: 'https://taskflow-5pfl.onrender.com/api',
+  signalRUrl: 'https://taskflow-5pfl.onrender.com/hubs/task'
 };

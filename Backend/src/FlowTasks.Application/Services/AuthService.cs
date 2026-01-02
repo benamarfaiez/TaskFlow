@@ -1,7 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 using FlowTasks.Application.DTOs;
 using FlowTasks.Application.DTOs.Auth;
 using FlowTasks.Application.Interfaces;
@@ -9,6 +5,11 @@ using FlowTasks.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace FlowTasks.Application.Services;
 
@@ -19,11 +20,14 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
+        Log.Information("LoginAsync"+ request.Email);
+
         var user = await _userManager.FindByEmailAsync(request.Email);
         if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
         {
             throw new UnauthorizedAccessException("Invalid email or password");
         }
+        Log.Information("FirstName: " + user.FirstName+ "Email: " + user.Email);
 
         var token = GenerateJwtToken(user);
         var refreshToken = GenerateRefreshToken();

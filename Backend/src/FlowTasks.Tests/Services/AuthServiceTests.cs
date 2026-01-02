@@ -3,6 +3,7 @@ using FlowTasks.Application.Services;
 using FlowTasks.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Moq;
 using System;
 using System.IdentityModel.Tokens.Jwt;
@@ -23,6 +24,7 @@ public class AuthServiceTests
     {
         // Configuration du UserManager Mock
         var userStoreMock = new Mock<IUserStore<User>>();
+        var loggerMock = new Mock<ILogger<AuthService>>();
         _userManagerMock = new Mock<UserManager<User>>(
             userStoreMock.Object, null, null, null, null, null, null, null, null
            );
@@ -34,7 +36,9 @@ public class AuthServiceTests
 
         _authService = new AuthService(
             _userManagerMock.Object,
-            _configurationMock.Object);
+            _configurationMock.Object,
+            loggerMock.Object
+        );
     }
 
     private void SetupJwtConfiguration()

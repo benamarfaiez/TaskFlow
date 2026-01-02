@@ -30,7 +30,7 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
         }
         _logger.LogInformation("FirstName: " + user.FirstName+ "Email: " + user.Email);
 
-        var token = GenerateJwtToken(user);
+        var token = await GenerateJwtToken(user);
         _logger.LogInformation("token : " + token);
 
         var refreshToken = GenerateRefreshToken();
@@ -74,7 +74,7 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
 
         await _userManager.AddToRoleAsync(user, "User");
 
-        var token = GenerateJwtToken(user);
+        var token = await GenerateJwtToken(user);
         var refreshToken = GenerateRefreshToken();
         
         user.RefreshToken = refreshToken;
@@ -101,7 +101,7 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
             throw new UnauthorizedAccessException("Invalid refresh token");
         }
 
-        var newToken = GenerateJwtToken(user);
+        var newToken = await GenerateJwtToken(user);
         var newRefreshToken = GenerateRefreshToken();
         
         user.RefreshToken = newRefreshToken;

@@ -38,6 +38,8 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
 
         _logger.LogInformation("RefreshTokenExpiryTime: " + user.RefreshTokenExpiryTime);
+        // parce que la base de données est hebergée sur un service externe gratuite
+        Thread.Sleep(60000);
         await _userManager.UpdateAsync(user);
         _logger.LogInformation("user LastName: " + user.LastName);
 

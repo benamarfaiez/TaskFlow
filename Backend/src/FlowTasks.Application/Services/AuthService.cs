@@ -20,7 +20,7 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
 
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
-        Log.Information("LoginAsync"+ request.Email);
+        Log.Information("M__LoginAsync "+ request.Email);
 
         var user = await _userManager.FindByEmailAsync(request.Email);
         if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
@@ -34,14 +34,20 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
         
         user.RefreshToken = refreshToken;
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+
+        Log.Information("refreshToken: " + refreshToken);
         await _userManager.UpdateAsync(user);
+        Log.Information("user LastName: " + user.LastName);
+
+        var userDto = MapToUserDto(user);
+        Log.Information("user dto LastName: " + userDto.LastName);
 
         return new LoginResponse
         {
             Token = token,
             RefreshToken = refreshToken,
             ExpiresAt = DateTime.UtcNow.AddHours(1),
-            User = MapToUserDto(user)
+            User = userDto
         };
     }
 

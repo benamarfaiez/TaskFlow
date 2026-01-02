@@ -169,10 +169,8 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
 
     private static string GenerateRefreshToken()
     {
-        var randomNumber = new byte[64];
-        using var rng = RandomNumberGenerator.Create();
-        rng.GetBytes(randomNumber);
-        return Convert.ToBase64String(randomNumber);
+        var randomBytes = RandomNumberGenerator.GetBytes(64);
+        return Convert.ToBase64String(randomBytes);
     }
 
     private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)

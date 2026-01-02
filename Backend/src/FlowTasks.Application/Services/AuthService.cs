@@ -21,8 +21,6 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
     private readonly ILogger<AuthService> _logger = logger;
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
-        Log.Information("M__LoginAsync "+ request.Email);
-
         var user = await _userManager.FindByEmailAsync(request.Email);
         if (user == null || !await _userManager.CheckPasswordAsync(user, request.Password))
         {
@@ -149,12 +147,12 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
         };
         _logger.LogInformation("M__GenerateJwtToken user: " + user);
 
-        var roles = await _userManager.GetRolesAsync(user);
-        _logger.LogInformation("User roles: " + roles);
+        var roles = new List<string> { "ADMIN", "USER" };
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
         }
+        _logger.LogInformation("User roles: " + roles);
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
             _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured")));

@@ -30,12 +30,15 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
         Log.Information("FirstName: " + user.FirstName+ "Email: " + user.Email);
 
         var token = GenerateJwtToken(user);
+        Log.Information("token : " + token);
+
         var refreshToken = GenerateRefreshToken();
-        
+        Log.Information("refreshToken : " + refreshToken);
+
         user.RefreshToken = refreshToken;
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
 
-        Log.Information("refreshToken: " + refreshToken);
+        Log.Information("RefreshTokenExpiryTime: " + user.RefreshTokenExpiryTime);
         await _userManager.UpdateAsync(user);
         Log.Information("user LastName: " + user.LastName);
 

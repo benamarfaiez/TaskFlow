@@ -4,6 +4,7 @@ using FlowTasks.Application.Interfaces;
 using FlowTasks.Domain.Entities;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using System.IdentityModel.Tokens.Jwt;
@@ -13,11 +14,11 @@ using System.Text;
 
 namespace FlowTasks.Application.Services;
 
-public class AuthService(UserManager<User> userManager, IConfiguration configuration) : IAuthService
+public class AuthService(UserManager<User> userManager, IConfiguration configuration, ILogger<AuthService> logger) : IAuthService
 {
     private readonly UserManager<User> _userManager = userManager;
     private readonly IConfiguration _configuration = configuration;
-
+    private readonly ILogger<AuthService> _logger = logger;
     public async Task<LoginResponse> LoginAsync(LoginRequest request)
     {
         Log.Information("M__LoginAsync "+ request.Email);
@@ -27,23 +28,23 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
         {
             throw new UnauthorizedAccessException("Invalid email or password");
         }
-        Log.Information("FirstName: " + user.FirstName+ "Email: " + user.Email);
+        _logger.LogInformation("FirstName: " + user.FirstName+ "Email: " + user.Email);
 
         var token = GenerateJwtToken(user);
-        Log.Information("token : " + token);
+        _logger.LogInformation("token : " + token);
 
         var refreshToken = GenerateRefreshToken();
-        Log.Information("refreshToken : " + refreshToken);
+        _logger.LogInformation("refreshToken : " + refreshToken);
 
         user.RefreshToken = refreshToken;
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
 
-        Log.Information("RefreshTokenExpiryTime: " + user.RefreshTokenExpiryTime);
+        _logger.LogInformation("RefreshTokenExpiryTime: " + user.RefreshTokenExpiryTime);
         await _userManager.UpdateAsync(user);
-        Log.Information("user LastName: " + user.LastName);
+        _logger.LogInformation("user LastName: " + user.LastName);
 
         var userDto = MapToUserDto(user);
-        Log.Information("user dto LastName: " + userDto.LastName);
+        _logger.LogInformation("user dto LastName: " + userDto.LastName);
 
         return new LoginResponse
         {
@@ -138,7 +139,7 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
         }
     }
 
-    private string GenerateJwtToken(User user)
+    private async Task<string> GenerateJwtToken(User user)
     {
         var claims = new List<Claim>
         {
@@ -147,7 +148,7 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
             new(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
         };
 
-        var roles = _userManager.GetRolesAsync(user).Result;
+        var roles = await _userManager.GetRolesAsync(user);
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));

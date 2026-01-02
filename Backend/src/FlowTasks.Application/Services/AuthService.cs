@@ -147,8 +147,10 @@ public class AuthService(UserManager<User> userManager, IConfiguration configura
             new(ClaimTypes.Email, user.Email ?? string.Empty),
             new(ClaimTypes.Name, $"{user.FirstName} {user.LastName}")
         };
+        _logger.LogInformation("M__GenerateJwtToken user: " + user);
 
         var roles = await _userManager.GetRolesAsync(user);
+        _logger.LogInformation("User roles: " + roles);
         foreach (var role in roles)
         {
             claims.Add(new Claim(ClaimTypes.Role, role));
